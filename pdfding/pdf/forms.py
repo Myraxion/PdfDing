@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from pdf.models.collection_models import Collection
 from pdf.models.pdf_models import Pdf
 from pdf.models.shared_models import SharedCollection, SharedPdf
-from pdf.models.workspace_models import Workspace
+from pdf.models.workspace_models import Workspace, WorkspaceRoles
 from pdf.services.workspace_services import (
     check_if_pdf_with_name_exists,
     get_shared_collections_of_workspace,
@@ -533,6 +533,15 @@ class WorkspaceDescriptionForm(forms.ModelForm):
         model = Workspace
         widgets = {'description': forms.Textarea(attrs={'rows': 3})}
         fields = ['description']
+
+
+class WorkspaceUserForm(forms.Form):  # pragma: no cover
+    """Form for adding users to a workspace."""
+
+    email = forms.CharField(
+        required=True, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': _('Email')})
+    )
+    role = forms.ChoiceField(choices=WorkspaceRoles)
 
 
 class CollectionForm(forms.Form):

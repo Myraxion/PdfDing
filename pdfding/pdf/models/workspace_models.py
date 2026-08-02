@@ -16,10 +16,9 @@ class WorkspaceError(Exception):
 
 
 class WorkspaceRoles(models.TextChoices):
-    OWNER = 'Owner'
-    ADMIN = 'Admin'
-    MEMBER = 'Member'
     GUEST = 'Guest'
+    MEMBER = 'Member'
+    OWNER = 'Owner'
 
 
 class Workspace(models.Model):
@@ -54,6 +53,23 @@ class Workspace(models.Model):
         return User.objects.filter(workspaceuser__in=self.workspaceuser_set.all())
 
     @property
+    def workspace_users_ordered(self) -> models.QuerySet:
+        """Get the users of the workspace."""
+
+        workspace_users = self.workspaceuser_set.all()
+        workspace_users = workspace_users.order_by(
+            models.Case(
+                models.When(role="Owner", then=models.Value(0)),
+                models.When(role="Member", then=models.Value(2)),
+                models.When(role="Guest", then=models.Value(3)),
+                default=models.Value(4),
+            ),
+            'user__email',
+        )
+
+        return workspace_users
+
+    @property
     def owners(self) -> models.QuerySet[User]:
         """Get the owners of the workspace."""
 
@@ -61,15 +77,6 @@ class Workspace(models.Model):
         owner_users = User.objects.filter(workspaceuser__in=owners)
 
         return owner_users
-
-    @property
-    def admins(self) -> models.QuerySet[User]:
-        """Get the admins of the workspace."""
-
-        admins = self.workspaceuser_set.filter(role=WorkspaceRoles.ADMIN)
-        admin_users = User.objects.filter(workspaceuser__in=admins)
-
-        return admin_users
 
     @property
     def members(self) -> models.QuerySet[User]:
@@ -109,7 +116,7 @@ class Workspace(models.Model):
 class WorkspaceUser(models.Model):
     """
     The workspace user model. It is linked to both a workspace and a user profile.
-    Workspace users can have the roles owner, admin, member and guest.
+    Workspace users can have the roles owner, member and guest.
     """
 
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False, blank=False)

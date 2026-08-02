@@ -6,7 +6,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from pdf.forms import WorkspaceDescriptionForm, WorkspaceForm, WorkspaceNameForm
 from pdf.models.pdf_models import Pdf
-from pdf.models.workspace_models import WorkspaceError
+from pdf.models.workspace_models import WorkspaceError, WorkspaceRoles, WorkspaceUser
 from pdf.services.workspace_services import create_workspace
 from pdf.views import workspace_views
 from users.service import get_demo_pdf
@@ -161,3 +161,77 @@ class TestDelete(WorkspaceTestCase):
         changed_user = User.objects.get(id=self.user.id)
         assert changed_user.profile.current_workspace_id == str(changed_user.id)
         assert changed_user.profile.current_collection_id == 'all'
+
+
+class TestAddUser(WorkspaceTestCase):
+    def test_add_user(self):
+        created_ws = create_workspace('created_ws', self.user)
+        self.user.profile.current_workspace_id = created_ws.id
+        self.user.profile.save()
+
+        some_user = User.objects.create_user(username='bla', password=self.password, email='a@b.com')
+
+        assert not created_ws.members.filter(id=some_user.id).exists()
+
+        response = self.client.post(
+            reverse('workspace_add_user'),
+            data={'email': some_user.email, 'role': 'Member'},
+        )
+
+        self.assertRedirects(response, reverse('workspace_users'), status_code=302)
+        assert created_ws.members.filter(id=some_user.id).exists()
+
+    def test_add_user_personal_ws(self):
+        some_user = User.objects.create_user(username='bla', password=self.password, email='a@b.com')
+        response = self.client.post(
+            reverse('workspace_add_user'),
+            data={'email': some_user.email, 'role': 'Member'},
+            follow=True,
+        )
+        message = list(response.context['messages'])[0]
+
+        assert message.message == 'Cannot add other users to personal workspaces!'
+
+    def test_add_user_already_part_of_workspace(self):
+        created_ws = create_workspace('created_ws', self.user)
+        self.user.profile.current_workspace_id = created_ws.id
+        self.user.profile.save()
+
+        some_user = User.objects.create_user(username='bla', password=self.password, email='a@b.com')
+        WorkspaceUser.objects.create(workspace=created_ws, user=some_user, role=WorkspaceRoles.MEMBER)
+
+        response = self.client.post(
+            reverse('workspace_add_user'),
+            data={'email': some_user.email, 'role': 'Member'},
+            follow=True,
+        )
+        message = list(response.context['messages'])[0]
+
+        assert message.message == 'User is already a user of the workspace!'
+
+    def test_add_user_user_not_existing(self):
+        response = self.client.post(
+            reverse('workspace_add_user'),
+            data={'email': 'a@b.com', 'role': 'Member'},
+            follow=True,
+        )
+
+        message = list(response.context['messages'])[0]
+
+        assert message.message == 'Specified user does not exist!'
+
+    def test_add_user_not_owner(self):
+        other_user = User.objects.create_user(username='bla', password=self.password, email='a@b.com')
+        other_user_ws = create_workspace('created_ws', other_user)
+        other_user_ws.add_user_to_workspace(self.user, WorkspaceRoles.MEMBER)
+
+        self.user.profile.current_workspace_id = other_user_ws.id
+        self.user.profile.save()
+
+        further_user = User.objects.create_user(username='blaaa', password=self.password, email='a@c.com')
+        response = self.client.post(
+            reverse('workspace_add_user'),
+            data={'email': further_user.email, 'role': 'Member'},
+        )
+
+        assert response.status_code == 404

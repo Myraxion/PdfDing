@@ -40,7 +40,7 @@ class TestSignals(TestCase):
         ws_1 = workspace_services.create_workspace('ws_1', user_1)
         ws_2 = workspace_services.create_workspace('ws_2', user_1)
         ws_1.add_user_to_workspace(user_2, WorkspaceRoles.OWNER)
-        ws_2.add_user_to_workspace(user_2, WorkspaceRoles.ADMIN)
+        ws_2.add_user_to_workspace(user_2, WorkspaceRoles.MEMBER)
 
         user_1.delete()
 

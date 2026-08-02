@@ -25,6 +25,12 @@
             <span class="hidden md:block">{% trans 'Workspace Details' %}</span>
         </a>
     </div>
+    <div {% if page == 'workspace_users' %} class="bg-slate-200 md:bg-slate-100 dark:bg-slate-800" {% endif %}>
+        <a href="{% url 'workspace_users' %}">
+            {% include 'includes/svg/user.html' %}
+            <span class="hidden md:block">{% trans 'Workspace Users' %}</span>
+        </a>
+    </div>
     <div {% if page == 'collection_details' %} class="bg-slate-200 md:bg-slate-100 dark:bg-slate-800" {% endif %}>
         <a href="{% url 'collection_details' workspace.id %}">
             {% include 'includes/svg/collection.html' %}

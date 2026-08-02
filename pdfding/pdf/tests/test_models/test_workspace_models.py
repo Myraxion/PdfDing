@@ -29,8 +29,8 @@ class TestWorkspace(TestCase):
         user_2 = User.objects.create_user(username='user_2', password='password')
         user_3 = User.objects.create_user(username='user_3', password='password')
 
-        WorkspaceUser.objects.create(workspace=self.ws, user=user_2, role=WorkspaceRoles.ADMIN)
-        WorkspaceUser.objects.create(workspace=self.ws, user=user_3, role=WorkspaceRoles.ADMIN)
+        WorkspaceUser.objects.create(workspace=self.ws, user=user_2, role=WorkspaceRoles.MEMBER)
+        WorkspaceUser.objects.create(workspace=self.ws, user=user_3, role=WorkspaceRoles.MEMBER)
 
         self.assertEqual(self.ws.users.count(), 3)
 
@@ -39,40 +39,19 @@ class TestWorkspace(TestCase):
 
     def test_owners_property(self):
         self.assertEqual(self.ws.owners.count(), 1)
-        self.assertEqual(self.ws.admins.count(), 0)
-        self.assertEqual(self.ws.members.count(), 0)
-        self.assertEqual(self.ws.guests.count(), 0)
 
         user_2 = User.objects.create_user(username='user_2', password='password')
         WorkspaceUser.objects.create(workspace=self.ws, user=user_2, role=WorkspaceRoles.OWNER)
 
         self.assertEqual(self.ws.owners.count(), 2)
-        self.assertEqual(self.ws.admins.count(), 0)
         self.assertEqual(self.ws.members.count(), 0)
         self.assertEqual(self.ws.guests.count(), 0)
 
         for expected_user, user in zip([self.user, user_2], self.ws.users.order_by('username')):
             self.assertEqual(expected_user, user)
 
-    def test_admins_property(self):
-        self.assertEqual(self.ws.owners.count(), 1)
-        self.assertEqual(self.ws.admins.count(), 0)
-        self.assertEqual(self.ws.members.count(), 0)
-        self.assertEqual(self.ws.guests.count(), 0)
-
-        user_2 = User.objects.create_user(username='user_2', password='password')
-        WorkspaceUser.objects.create(workspace=self.ws, user=user_2, role=WorkspaceRoles.ADMIN)
-
-        self.assertEqual(self.ws.owners.count(), 1)
-        self.assertEqual(self.ws.admins.count(), 1)
-        self.assertEqual(self.ws.members.count(), 0)
-        self.assertEqual(self.ws.guests.count(), 0)
-
-        self.assertEqual(self.ws.admins[0], user_2)
-
     def test_members_property(self):
         self.assertEqual(self.ws.owners.count(), 1)
-        self.assertEqual(self.ws.admins.count(), 0)
         self.assertEqual(self.ws.members.count(), 0)
         self.assertEqual(self.ws.guests.count(), 0)
 
@@ -80,7 +59,6 @@ class TestWorkspace(TestCase):
         WorkspaceUser.objects.create(workspace=self.ws, user=user_2, role=WorkspaceRoles.MEMBER)
 
         self.assertEqual(self.ws.owners.count(), 1)
-        self.assertEqual(self.ws.admins.count(), 0)
         self.assertEqual(self.ws.members.count(), 1)
         self.assertEqual(self.ws.guests.count(), 0)
 
@@ -88,7 +66,6 @@ class TestWorkspace(TestCase):
 
     def test_guests_property(self):
         self.assertEqual(self.ws.owners.count(), 1)
-        self.assertEqual(self.ws.admins.count(), 0)
         self.assertEqual(self.ws.members.count(), 0)
         self.assertEqual(self.ws.guests.count(), 0)
 
@@ -96,7 +73,6 @@ class TestWorkspace(TestCase):
         WorkspaceUser.objects.create(workspace=self.ws, user=user_2, role=WorkspaceRoles.GUEST)
 
         self.assertEqual(self.ws.owners.count(), 1)
-        self.assertEqual(self.ws.admins.count(), 0)
         self.assertEqual(self.ws.members.count(), 0)
         self.assertEqual(self.ws.guests.count(), 1)
 
@@ -111,17 +87,34 @@ class TestWorkspace(TestCase):
 
         self.assertEqual(self.ws.collections.order_by('name')[1], created_collection)
 
+    def test_workspace_users_ordered(self):
+        user_2 = User.objects.create_user(username='some_guest', password='password')
+        user_3 = User.objects.create_user(username='some_member', email='some@a.com', password='password')
+        user_4 = User.objects.create_user(username='other_member', email='other@a.com', password='password')
+        WorkspaceUser.objects.create(workspace=self.ws, user=user_2, role=WorkspaceRoles.GUEST)
+        WorkspaceUser.objects.create(workspace=self.ws, user=user_3, role=WorkspaceRoles.MEMBER)
+        WorkspaceUser.objects.create(workspace=self.ws, user=user_4, role=WorkspaceRoles.MEMBER)
+
+        ordered_users = self.ws.workspace_users_ordered
+        assert ordered_users.count() == 4
+
+        # users need to be sorted by role and name
+        assert ordered_users[0].user == self.user
+        assert ordered_users[1].user == user_4
+        assert ordered_users[2].user == user_3
+        assert ordered_users[3].user == user_2
+
     def test_add_workspace_user(self):
         user_2 = User.objects.create_user(username='user_2', password='password')
 
         self.assertEqual(self.ws.users.count(), 1)
-        self.assertEqual(self.ws.admins.count(), 0)
+        self.assertEqual(self.ws.members.count(), 0)
 
-        self.ws.add_user_to_workspace(user_2, WorkspaceRoles.ADMIN)
+        self.ws.add_user_to_workspace(user_2, WorkspaceRoles.MEMBER)
 
         self.assertEqual(self.ws.users.count(), 2)
-        self.assertEqual(self.ws.admins.count(), 1)
-        self.assertEqual(self.ws.admins[0], user_2)
+        self.assertEqual(self.ws.members.count(), 1)
+        self.assertEqual(self.ws.members[0], user_2)
 
     def test_add_workspace_user_personal_workspace(self):
         personal_ws = self.user.profile.workspaces[0]
@@ -130,8 +123,8 @@ class TestWorkspace(TestCase):
         with self.assertRaisesMessage(
             WorkspaceError, expected_message='Cannot add other users to personal workspaces!'
         ):
-            personal_ws.add_user_to_workspace(user_2, WorkspaceRoles.ADMIN)
+            personal_ws.add_user_to_workspace(user_2, WorkspaceRoles.MEMBER)
 
     def test_add_workspace_user_user_present(self):
         with self.assertRaisesMessage(WorkspaceError, expected_message='User is already a user of the workspace!'):
-            self.ws.add_user_to_workspace(self.user, WorkspaceRoles.ADMIN)
+            self.ws.add_user_to_workspace(self.user, WorkspaceRoles.MEMBER)

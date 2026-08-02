@@ -1,0 +1,71 @@
+{% extends 'layouts/details_without_image.html' %}
+{% load i18n %}
+
+{% block inner_content %}
+<div class="min-h-80">
+  <div class="flex w-full items-center justify-between">
+    <div id="name" class="w-[86%] text-md flex flex-row">
+      <span class="text-2xl font-bold">
+        {% trans 'Workspace Users' %}
+      </span>
+    </div>
+  </div>
+  {% if workspace.personal_workspace %}
+  <div class="h-72 flex flex-col justify-between">
+    <div class="pt-4">
+      <div>
+        <span class="text-lg font-semibold">{{ request.user.email }}</span>
+      </div>
+      <div class="flex justify-between text-slate-600 dark:text-slate-400">
+        <div class="w-5/6">
+          <span id="theme">{% trans 'Owner' %}</span>
+        </div>
+      </div>
+    </div>
+    <div class="text-slate-600 dark:text-slate-400 text-sm">
+      No other users can be added to a personal workspace.
+    </div>
+  </div>
+  {% else %}
+  <div class="pt-2 md:pt-4">
+    <form id="add_workspace_user"
+          action="{% url 'workspace_add_user' %}"
+          method="post"
+          class="flex gap-1 text-black dark:text-slate-200 h-8 w-11/12!
+                [&>select]:bg-slate-200 dark:[&>select]:bg-slate-700
+                [&>input]:bg-slate-200! dark:[&>input]:bg-slate-700!
+                [&>input]:rounded-sm! [&>input]:w-38! min-[460px]:[&>input]:w-60!"
+          autocomplete="off">
+        {% csrf_token %}
+
+        {% for field in form %}{{ field }}{% endfor %}
+        <button id="submit_user_add"
+                class="flex! items-center justify-center rounded-sm!"
+                type="submit">
+          {% trans 'Add' %}
+        </button>
+    </form>
+  </div>
+  <div>
+    {% for ws_user in workspace.workspace_users_ordered %}
+    <div class="pt-4">
+      <span class="text-lg font-semibold">{{ ws_user.user.email }}</span>
+    </div>
+    <div class="flex justify-between text-slate-600 dark:text-slate-400">
+        <div class="w-5/6">
+            <span id="theme">{{ ws_user.role }}</span>
+        </div>
+        <div class="pr-0 md:pr-6">
+            <a id="theme_edit" class="cursor-pointer text-primary hover:text-secondary"
+                hx-get="{% url 'profile-setting-change' 'theme' %}"
+                hx-target="#theme"
+                hx-swap="innerHTML" >
+                {{ edit }}
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

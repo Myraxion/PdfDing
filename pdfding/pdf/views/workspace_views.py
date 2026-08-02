@@ -1,9 +1,13 @@
 from base import base_views
-from django.http import HttpRequest
+from django.contrib import messages
+from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404, HttpRequest
 from django.shortcuts import redirect, render
-from pdf.forms import WorkspaceDescriptionForm, WorkspaceForm, WorkspaceNameForm
+from django.utils.translation import gettext_lazy as _
+from pdf.forms import WorkspaceDescriptionForm, WorkspaceForm, WorkspaceNameForm, WorkspaceUserForm
 from pdf.models.collection_models import Collection
-from pdf.models.workspace_models import Workspace, WorkspaceError
+from pdf.models.workspace_models import Workspace, WorkspaceError, WorkspaceRoles
 from pdf.services.pdf_services import check_object_access_allowed
 from pdf.services.workspace_services import create_workspace, get_pdfs_of_workspace, get_size_of_all_workspace_pdfs
 
@@ -136,6 +140,51 @@ class Details(WorkspaceMixin, base_views.BaseDetails):
         }
 
         return render(request, 'workspace_details.html', context)
+
+
+class Users(WorkspaceMixin, base_views.BaseDetails):
+    """View for displaying the users page of a workspace."""
+
+    # returns the current workspace, needs to be adjusted in the future
+    def get(self, request: HttpRequest, identifier: str | None = None):  # pragma: no cover
+        """Display the details page."""
+
+        ws = request.user.profile.current_workspace
+
+        context = {
+            'workspace': ws,
+            'sidebar_name': 'includes/workspace_sidebar.html',
+            'page': 'workspace_users',
+            'form': WorkspaceUserForm(),
+        }
+
+        return render(request, 'workspace_users.html', context)
+
+
+class AddUser(WorkspaceMixin, base_views.BaseDetails):
+    """View for adding a user to a workspace."""
+
+    def post(self, request: HttpRequest):
+        workspace = request.user.profile.current_workspace
+        current_user = request.user
+
+        if not workspace.owners.filter(id=current_user.id).exists():
+            raise Http404(_('Current user is not a owner of this workspace!'))
+
+        try:
+            email = request.POST.get('email')
+            user = User.objects.get(email=email)
+            role = WorkspaceRoles(request.POST.get('role'))
+
+            workspace.add_user_to_workspace(user, role)
+            messages.info(request, _('Added user to workspace.'))
+
+        except ObjectDoesNotExist:
+            messages.warning(request, _('Specified user does not exist!'))
+        except WorkspaceError as workspace_error:
+            messages.info(request, str(workspace_error))
+
+        return redirect('workspace_users')
 
 
 class CollectionDetails(WorkspaceMixin, base_views.BaseDetails):

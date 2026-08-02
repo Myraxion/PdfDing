@@ -107,3 +107,22 @@ class TestWorkspaceE2ETestCase(PdfDingE2ETestCase):
             self.open(reverse('workspace_details'), p)
 
             expect(self.page.locator("#delete-workspace").first).not_to_be_visible()
+
+    def test_add_user(self):
+        created_ws = create_workspace('created_ws', self.user)
+        self.user.profile.current_workspace_id = created_ws.id
+        self.user.profile.save()
+
+        some_user = User.objects.create_user(username="bla", password=self.password, email="a@b.com")
+
+        assert not created_ws.members.filter(id=some_user.id).exists()
+
+        with sync_playwright() as p:
+            self.open(reverse("workspace_users"), p)
+
+            self.page.locator("#id_email").click()
+            self.page.locator("#id_email").fill("a@b.com")
+            self.page.locator("#id_role").select_option("Member")
+            self.page.locator("#submit_user_add").click()
+
+        assert created_ws.members.filter(id=some_user.id).exists()
