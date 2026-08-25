@@ -1,10 +1,10 @@
 [project]
 name = "pdfding"
 # do not change the version line position as it will break the automated update after a release
-version = "1.9.0"
+version = "1.13.0"
 description = "Selfhosted PDF manager, viewer and editor offering a seamless user experience on multiple devices."
 authors = [
-  { name = "mrmn2" },
+  { name = "mrmn" },
 ]
 readme = "README.md"
 license = "AGPL-3.0-only"

@@ -124,7 +124,7 @@ def get_example_notes():  # pragma: no cover
     notes = '''
 ## **`Example Note`**
 
-In the notes you can add further information about your PDF. Notes support markdown, so it is possible to use `inline code` or [links](https://github.com/mrmn2/PdfDing). You can also use lists:
+In the notes you can add further information about your PDF. Notes support markdown, so it is possible to use `inline code` or [links](https://codeberg.org/mrmn/PdfDing). You can also use lists:
 
 * here is an example element
     * nested lists are also possible
