@@ -19,13 +19,10 @@
 </p>
 <br/>
 
-[![GitHub Repo Stars](https://img.shields.io/github/stars/mrmn2/PdfDing?style=flat&logo=github)](https://github.com/mrmn2/PdfDing)
+[![License](https://img.shields.io/badge/license-AGPL--3.0-blue)](https://codeberg.org/mrmn/PdfDing/src/branch/master/LICENSE)
 [![Docker Pulls](https://img.shields.io/docker/pulls/mrmn/pdfding?style=flat&logo=docker&logoColor=white)](https://hub.docker.com/r/mrmn/pdfding)
-[![Version](https://img.shields.io/github/v/release/mrmn2/PdfDing?style=flat&label=version)](https://github.com/mrmn2/PdfDing/releases)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/mrmn2/PdfDing/tests.yaml?style=flat&logo=github&label=ci)](https://github.com/mrmn2/PdfDing/actions)
-[![Last Commit](https://img.shields.io/github/last-commit/mrmn2/PdfDing?style=flat&logo=github)](https://github.com/mrmn2/PdfDing/commits/master/)
-
-<img src="https://www.pdfding.com/assets/images/pdfding_overview_dark.png" alt="PdfDing Demo Screenshot"/>
+[![Version](https://img.shields.io/gitea/v/release/mrmn/PdfDing?style=flat&label=version&gitea_url=https://codeberg.org)](https://codeberg.org/mrmn/PdfDing/releases)
+[![Last Commit](https://img.shields.io/gitea/last-commit/mrmn/PdfDing?style=flat&logo=codeberg&gitea_url=https://codeberg.org)](https://codeberg.org/mrmn/PdfDing/commits/branch/master)
 
 ## Introduction
 
