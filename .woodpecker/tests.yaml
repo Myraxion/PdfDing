@@ -1,0 +1,65 @@
+when:
+  - event: manual
+  - event: pull_request
+    branch: master
+    evaluate: 'CI_COMMIT_AUTHOR == CI_REPO_OWNER'
+    path:
+      include:
+        - 'pdfding/**/*.py'
+        - 'pdfding/**/*.html'
+        - 'pyproject.toml'
+        - 'package.json'
+        - '.github/workflows/tests.yaml'
+        - 'Dockerfile'
+
+clone:
+  git:
+    image: woodpeckerci/plugin-git@sha256:0f06b03ec33137b556c77538563f66c400339052d0c5199d4c3ad1a2a37e1964  # 2.10.0
+    settings:
+      depth: 1
+      lfs: false
+
+steps:
+  code-quality:
+    image: python:3.12.13-slim
+    depends_on: []
+    commands:
+      - pip install poetry==2.4.1
+      - poetry install --without e2e
+      - poetry run flake8
+      - poetry run black . --check
+      - poetry run bandit -x "**/tests/*,**/e2e/*" -r .
+  unit-tests:
+    image: python:3.12.13-slim
+    depends_on: []
+    commands:
+      - apt-get update && apt-get install --no-install-recommends -y libmagic1
+      - pip install poetry==2.4.1
+      - poetry install --without e2e
+      - cd pdfding
+      - poetry run pytest --ignore=e2e --cov=admin --cov=backup --cov=base --cov=pdf --cov=users --cov-fail-under=100
+  e2e-tests:
+    image: node:24.19.0-trixie-slim
+    depends_on: []
+    commands:
+      - apt-get update && apt-get install --no-install-recommends -y ca-certificates curl libmagic1 python3 python3-pip pipx unzip
+      - export PATH="/root/.local/bin:$PATH"
+      - npm ci --ignore-scripts
+      - npm run build:pdfjs
+      - npm run build
+      - npx --yes @tailwindcss/cli -i pdfding/static/css/input.css -o pdfding/static/css/tailwind.css --minify
+      - pipx install poetry==2.4.1
+      - poetry install
+      - poetry run playwright install chromium-headless-shell --with-deps
+      - poetry run python -m pytest pdfding/e2e -n auto --maxprocesses=8
+  publish_dry_run:
+    # buildx package needs to be pinned to 6, otherwise will fail
+    # stick to 6.0.3 until https://codeberg.org/woodpecker-plugins/docker-buildx/issues/306
+    image: woodpeckerci/plugin-docker-buildx:6.0.3
+    depends_on: []
+    settings:
+      dockerfile: Dockerfile
+      platforms: linux/amd64
+      dry_run: true
+      repo: mrmn/pdfding
+      tags: latest
