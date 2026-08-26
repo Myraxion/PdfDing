@@ -38,6 +38,7 @@ pytest-django = "==4.12.0"
 
 [tool.poetry.group.e2e.dependencies]
 pytest-playwright = "==0.8.0"
+pytest-xdist = "==3.8.0"
 
 [tool.black]
 line-length = 120
@@ -58,7 +59,7 @@ exclude = '''
 '''
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "pdfding.core.settings"
+DJANGO_SETTINGS_MODULE = "pdfding.core.settings.test"
 
 [tool.bandit]
 exclude_dirs = ["tests", "path/to/file"]

@@ -114,15 +114,8 @@ else:
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': DATA_DIR / 'db' / 'db.sqlite3',
             'BACKUP_NAME': DATA_DIR / 'db' / 'backup.sqlite3',
-            'TEST': {
-                'NAME': DATA_DIR / 'db' / 'test.sqlite3',
-            },
         }
     }
-
-    # remove entry for the e2e tests as it causes problems and is not needed
-    if environ.get('E2E_TESTS'):
-        DATABASES['default'].pop('TEST')
 
 
 # Password validation

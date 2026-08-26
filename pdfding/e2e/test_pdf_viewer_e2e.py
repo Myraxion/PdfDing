@@ -30,7 +30,7 @@ class TestPdfViewerE2ETestCase(PdfDingE2ETestCase):
             self.page.locator("#pageNumber").press("Enter")
 
             # we need to sleep a bit, so the current page is updated
-            sleep(3)
+            sleep(4)
 
         reading_info = get_or_create_pdf_reading_info(self.pdf, self.user.profile)
         assert reading_info.current_page == 3

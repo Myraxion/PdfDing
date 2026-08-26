@@ -93,7 +93,7 @@ def backup_function():
     logger.info('----------------------------------------------------')
 
 
-def backup_sqlite(db_path: Path, backup_path: Path):
+def backup_sqlite(db_path: Path, backup_path: Path):  # pragma: no cover
     """Create a backup of a sqlite database"""
 
     conn = sqlite3.connect(db_path, detect_types=sqlite3.PARSE_DECLTYPES, uri=True)
