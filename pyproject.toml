@@ -60,6 +60,9 @@ exclude = '''
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "pdfding.core.settings.test"
+markers = [
+      "pdfjs",
+]
 
 [tool.bandit]
 exclude_dirs = ["tests", "path/to/file"]

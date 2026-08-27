@@ -13,6 +13,8 @@ steps:
     when:
       - event: manual
         evaluate: 'CI_PIPELINE_RELEASE_TITLE != ""'
+    # buildx package needs to be pinned to 6, otherwise will fail
+    # stick to 6.0.3 until https://codeberg.org/woodpecker-plugins/docker-buildx/issues/306
     image: woodpeckerci/plugin-docker-buildx:6.0.3
     settings:
       dockerfile: Dockerfile

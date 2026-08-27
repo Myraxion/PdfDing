@@ -1,5 +1,6 @@
 from time import sleep
 
+import pytest
 from django.urls import reverse
 from helpers import PdfDingE2ETestCase
 from pdf.models.pdf_models import Pdf
@@ -8,6 +9,7 @@ from playwright.sync_api import expect, sync_playwright
 from users.service import get_demo_pdf
 
 
+@pytest.mark.pdfjs
 class TestPdfViewerE2ETestCase(PdfDingE2ETestCase):
     def setUp(self, login: bool = True) -> None:
         super().setUp()
@@ -30,7 +32,7 @@ class TestPdfViewerE2ETestCase(PdfDingE2ETestCase):
             self.page.locator("#pageNumber").press("Enter")
 
             # we need to sleep a bit, so the current page is updated
-            sleep(4)
+            sleep(3)
 
         reading_info = get_or_create_pdf_reading_info(self.pdf, self.user.profile)
         assert reading_info.current_page == 3
