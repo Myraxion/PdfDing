@@ -1,0 +1,27 @@
+when:
+  - event: manual
+
+clone:
+  git:
+    image: woodpeckerci/plugin-git@sha256:0f06b03ec33137b556c77538563f66c400339052d0c5199d4c3ad1a2a37e1964  # 2.10.0
+    settings:
+      depth: 1
+      lfs: false
+
+steps:
+  publish_manual:
+    when:
+      - event: manual
+        evaluate: 'CI_COMMIT_TAG != ""'
+    image: woodpeckerci/plugin-docker-buildx:6.0.3
+    settings:
+      dockerfile: Dockerfile
+      platforms: linux/amd64,linux/arm64
+      repo: ${CI_REPO_OWNER}/pdfding
+      registry: docker.io
+      tags: ${CI_COMMIT_TAG}
+      username: ${CI_REPO_OWNER}
+      password:
+        from_secret: DOCKER_TOKEN
+      build_args_from_env:
+        - CI_COMMIT_TAG

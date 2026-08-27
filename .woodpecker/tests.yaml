@@ -1,7 +1,6 @@
 when:
-  - event: manual
   - event: pull_request
-    branch: master
+    branch: master1
     evaluate: 'CI_COMMIT_AUTHOR == CI_REPO_OWNER'
     path:
       include:
@@ -61,5 +60,5 @@ steps:
       dockerfile: Dockerfile
       platforms: linux/amd64
       dry_run: true
-      repo: mrmn/pdfding
+      repo: ${CI_REPO_OWNER}/pdfding
       tags: latest
