@@ -1,6 +1,6 @@
 when:
   - event: pull_request
-    branch: master1
+    branch: master
     evaluate: 'CI_COMMIT_AUTHOR == CI_REPO_OWNER'
     path:
       include:
@@ -8,7 +8,7 @@ when:
         - 'pdfding/**/*.html'
         - 'pyproject.toml'
         - 'package.json'
-        - '.github/workflows/tests.yaml'
+        - '.woodpecker/tests.yaml'
         - 'Dockerfile'
 
 clone:

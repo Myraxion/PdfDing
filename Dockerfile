@@ -72,9 +72,9 @@ RUN sh -x \
 # remove the static files in another location
 RUN rm -r pdfding/static/*
 
-ARG CI_COMMIT_TAG
+ARG CI_PIPELINE_RELEASE_TITLE
 # add version to settings
-RUN if [[ $CI_COMMIT_TAG ]]; then echo "VERSION = '$CI_COMMIT_TAG'" > /app/pdfding/core/settings/version.py; fi
+RUN if [[ $CI_PIPELINE_RELEASE_TITLE ]]; then echo "VERSION = '$CI_PIPELINE_RELEASE_TITLE'" > /app/pdfding/core/settings/version.py; fi
 
 # The runtime image, used to just run the code provided its virtual environment
 FROM python-base AS runtime

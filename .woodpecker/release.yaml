@@ -1,0 +1,24 @@
+when:
+  - event: release
+
+clone:
+  git:
+    image: woodpeckerci/plugin-git@sha256:0f06b03ec33137b556c77538563f66c400339052d0c5199d4c3ad1a2a37e1964  # 2.10.0
+    settings:
+      depth: 1
+      lfs: false
+
+steps:
+  release:
+    image: woodpeckerci/plugin-docker-buildx:6.0.3
+    settings:
+      dockerfile: Dockerfile
+      platforms: linux/amd64,linux/arm64
+      repo: ${CI_REPO_OWNER}/pdfding
+      registry: docker.io
+      tags: latest,${CI_PIPELINE_RELEASE_TITLE}
+      username: ${CI_REPO_OWNER}
+      password:
+        from_secret: DOCKER_TOKEN
+      build_args_from_env:
+        - CI_PIPELINE_RELEASE_TITLE
