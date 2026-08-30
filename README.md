@@ -30,7 +30,8 @@ PdfDing is a PDF manager, viewer and editor that you can host yourself. It offer
 devices. It's designed be to be minimal, fast, and easy to set up using Docker.
 
 The name is a combination of PDF and *ding*. Ding is the German word for thing. Thus, PdfDing is a thing for
-your PDFs.
+your PDFs. The name is a homage to the bookmark manager [Linkding](https://linkding.link/), which initially
+heavily inspired the UI of PdfDing.
 
 A live demo is available at [demo.pdfding.com](https://demo.pdfding.com/).
 

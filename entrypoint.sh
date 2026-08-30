@@ -18,7 +18,7 @@ fi
 python manage.py migrate
 python manage.py clean_up
 
-if [ "$BACKUP_ENABLE" = "TRUE" ] || [ "$BACKUP_ENABLE" = True ] || [ "$CONSUME_ENABLE" = "TRUE" ] || [ "$CONSUME_ENABLE" = True ]; then
+if [ "$CONSUME_ENABLE" = "TRUE" ] || [ "$CONSUME_ENABLE" = True ]; then
   python manage.py run_huey &
 fi
 

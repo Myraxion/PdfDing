@@ -36,7 +36,7 @@ steps:
       - pip install poetry==2.4.1
       - poetry install --without e2e
       - cd pdfding
-      - poetry run pytest --ignore=e2e --cov=admin --cov=backup --cov=base --cov=pdf --cov=users --cov-fail-under=100
+      - poetry run pytest --ignore=e2e --cov=admin --cov=base --cov=pdf --cov=users --cov-fail-under=100
   e2e-tests:
     image: node:24.19.0-trixie-slim
     depends_on: []

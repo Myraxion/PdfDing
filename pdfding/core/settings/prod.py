@@ -64,34 +64,6 @@ if environ.get('MFA_ALLOW_UNVERIFIED_EMAIL', 'FALSE') in ['TRUE', 'True']:
 if environ.get('MFA_WEBAUTHN_ALLOW_INSECURE_ORIGIN', 'FALSE') in ['TRUE', 'True']:
     MFA_WEBAUTHN_ALLOW_INSECURE_ORIGIN = True
 
-# backup settings
-if environ.get('BACKUP_ENABLE') in ['TRUE', 'True']:
-    # without a dummy value, huey will not start
-    BACKUP_ENABLED = True
-    BACKUP_ENDPOINT = environ.get('BACKUP_ENDPOINT', 'minio.pdfding.com')
-    BACKUP_ACCESS_KEY = environ.get('BACKUP_ACCESS_KEY')
-    BACKUP_SECRET_KEY = environ.get('BACKUP_SECRET_KEY')
-    BACKUP_REGION = environ.get('BACKUP_REGION', 'us-east-1')
-    BACKUP_BUCKET_NAME = environ.get('BACKUP_BUCKET_NAME', 'pdfding')
-    BACKUP_SCHEDULE = environ.get('BACKUP_SCHEDULE', '0 2 * * *')
-    if environ.get('BACKUP_SECURE') in ['TRUE', 'True']:
-        BACKUP_SECURE = True
-    else:
-        BACKUP_SECURE = False
-
-    if environ.get('BACKUP_ENCRYPTION_ENABLE') in ['TRUE', 'True']:
-        BACKUP_ENCRYPTION_ENABLED = True
-        BACKUP_ENCRYPTION_PASSWORD = environ['BACKUP_ENCRYPTION_PASSWORD']
-        BACKUP_ENCRYPTION_SALT = environ.get('BACKUP_ENCRYPTION_SALT', 'pdfding')
-    else:
-        BACKUP_ENCRYPTION_ENABLED = False
-        # set to none, so that backups.tasks.backup_function raises no attribute error
-        BACKUP_ENCRYPTION_PASSWORD = None
-        BACKUP_ENCRYPTION_SALT = None
-else:
-    BACKUP_ENABLED = False
-    BACKUP_SCHEDULE = '0 2 * * *'
-
 # consume settings
 if environ.get('CONSUME_ENABLE') in ['TRUE', 'True']:
     CONSUME_ENABLED = True

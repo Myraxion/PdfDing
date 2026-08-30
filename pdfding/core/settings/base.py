@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django_htmx',
     'huey.contrib.djhuey',
     'admin',
-    'backup',
     'pdf',
     'users',
 ]
@@ -50,7 +49,6 @@ INSTALLED_APPS = [
 # remove these apps for the e2e tests as they cause problems and are not needed
 if environ.get('E2E_TESTS'):
     INSTALLED_APPS.remove('huey.contrib.djhuey')
-    INSTALLED_APPS.remove('backup')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -113,7 +111,6 @@ else:
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': DATA_DIR / 'db' / 'db.sqlite3',
-            'BACKUP_NAME': DATA_DIR / 'db' / 'backup.sqlite3',
         }
     }
 

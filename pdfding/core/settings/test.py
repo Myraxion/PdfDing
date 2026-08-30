@@ -4,7 +4,6 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': ':memory:',
-        'BACKUP_NAME': DATA_DIR / 'db' / 'backup.sqlite3',  # noqa: F405
     }
 }
 
