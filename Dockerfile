@@ -19,6 +19,8 @@ RUN apt-get update && apt-get install curl unzip -y
 RUN npm run build:pdfjs
 RUN rm -rf pdfding/static/pdfjs/web/locale \
     pdfding/static/pdfjs/web/standard_fonts \
+    pdfding/static/pdfjs/**/*.mjs.map \
+    pdfding/static/pdfjs/web/debugger.* \
     pdfding/static/pdfjs/web/compressed.tracemonkey-pldi-09.pdf
 # get other dependecies
 RUN npm ci --ignore-scripts && npm run build
