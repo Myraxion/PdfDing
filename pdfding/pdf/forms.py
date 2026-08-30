@@ -37,11 +37,10 @@ class AddFormNoFile(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'placeholder': _('Add PDF Name')}),
             'description': forms.Textarea(attrs={'rows': 2, 'placeholder': _('Add Description')}),
-            'notes': forms.Textarea(attrs={'rows': 8, 'placeholder': _('Add Notes')}),
             'file_directory': forms.TextInput(attrs={'placeholder': _('Add File Directory')}),
         }
 
-        fields = ['name', 'description', 'notes', 'file_directory']
+        fields = ['name', 'description', 'file_directory']
 
     def __init__(self, *args, **kwargs):
         """
@@ -127,12 +126,6 @@ class BulkAddFormNoFile(forms.Form):
         help_text=_('Optional'),
     )
 
-    notes = forms.CharField(
-        required=False,
-        widget=forms.Textarea(attrs={'rows': 8, 'placeholder': _('Add Notes')}),
-        help_text=_('Optional, supports Markdown'),
-    )
-
     tag_string = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Add Tags')}),
@@ -202,15 +195,6 @@ def create_field_form(pdfding_model, field: str, field_widget=None) -> forms.Mod
                 widgets = {field: field_widget}
 
     return FieldForm
-
-
-class NotesForm(forms.ModelForm):
-    """Form for changing the notes of a PDF."""
-
-    class Meta:
-        model = Pdf
-        widgets = {'notes': forms.Textarea(attrs={'rows': 20})}
-        fields = ['notes']
 
 
 class NameForm(forms.ModelForm):
@@ -633,8 +617,6 @@ class AdvancedSearchForm(forms.Form):
     tags.group = 'PDF Details'
     description = forms.CharField(required=False)
     description.group = 'PDF Details'
-    notes = forms.CharField(required=False)
-    notes.group = 'PDF Details'
 
     # metadata fields
     title = forms.CharField(required=False)

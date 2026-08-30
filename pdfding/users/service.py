@@ -99,47 +99,12 @@ def create_demo_user(email: str, password: str):
     for pdf_name, description, tag_string in zip(pdf_names, descriptions, tag_strings):
         pdf_file = get_demo_pdf()
 
-        if pdf_name == 'Self-hosting Guide':
-            notes = get_example_notes()
-        else:
-            notes = ''
-
         PdfProcessingServices.create_pdf(
             name=pdf_name,
             collection=user.profile.current_collection,
             pdf_file=pdf_file,
             description=description,
             tag_string=tag_string,
-            notes=notes,
         )
 
     return user
-
-
-def get_example_notes():  # pragma: no cover
-    """
-    Get example notes for demo user
-    """
-
-    notes = '''
-## **`Example Note`**
-
-In the notes you can add further information about your PDF. Notes support markdown, so it is possible to use `inline code` or [links](https://codeberg.org/mrmn/PdfDing). You can also use lists:
-
-* here is an example element
-    * nested lists are also possible
-* here is another one
-
-Of course you can also use code blocks
-
-```
-# example code
-def example_code():
-    print('hi')
-```
-or block quotes
-> this is a block quote
->> with a nested block quote
-'''  # noqa: E501
-
-    return notes

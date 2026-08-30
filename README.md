@@ -48,7 +48,6 @@ A live demo is available at [demo.pdfding.com](https://demo.pdfding.com/).
 * Use bulk actions to manage multiple PDFs at once
 * Share collections and PDFs with an external audience via a link or a QR Code with optional access control
 * Protect accounts with two-factor authentication (TOTP + WebAuthn)
-* Markdown Notes
 * Progress bars show the reading progress of each PDF at a quick glance
 
 ## Getting started

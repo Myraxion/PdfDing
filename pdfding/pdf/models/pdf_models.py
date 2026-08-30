@@ -2,13 +2,10 @@ import re
 from datetime import datetime, timezone
 from uuid import uuid4
 
-import markdown
-import nh3
 from core.settings import MEDIA_ROOT
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.db import models
 from django.db.models import DateTimeField
-from django.utils.safestring import mark_safe
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from pdf.models.collection_models import Collection
@@ -130,7 +127,6 @@ class Pdf(models.Model):
         blank=False, editable=False, default=datetime(2000, 1, 1, tzinfo=timezone.utc)
     )  # # deprecated
     name = models.CharField(max_length=512, blank=False)
-    notes = models.TextField(default='', blank=True, help_text=_('Optional, supports Markdown'))
     number_of_pages = models.IntegerField(default=-1)
     preview = models.FileField(upload_to=get_preview_path, null=True, blank=False)
     revision = models.IntegerField(default=0)
@@ -176,21 +172,6 @@ class Pdf(models.Model):
         """Get the workspace the PDF belongs to."""
 
         return self.collection.workspace
-
-    @property
-    def notes_html(self) -> str:
-        """Converts markdown notes to html and sanitizes them, so that they can be displayed in the PDF overview."""
-
-        notes_html = markdown.markdown(str(self.notes), extensions=['fenced_code', 'nl2br'])
-        cleaned_notes_html = nh3.clean(
-            notes_html,
-            attributes=MarkdownHelper.get_allowed_markdown_attributes(),
-            tags=MarkdownHelper.get_allowed_markdown_tags(),
-        )
-
-        # bandit will report a vulnerability because of the usage of mark_safe of XSS and cross-site scripting
-        # vulnerabilities. since nh3 is used to clean the generated markdown we can ignore the warning
-        return mark_safe(cleaned_notes_html)  # nosec
 
 
 class Metadata(models.Model):
@@ -260,31 +241,3 @@ class PdfComment(PdfAnnotation):
 
 class PdfHighlight(PdfAnnotation):
     """Model for the pdf highlights."""
-
-
-class MarkdownHelper:  # pragma: no cover
-    @staticmethod
-    def get_allowed_markdown_tags() -> set[str]:
-        """Get the html tags that are allowed when sanitizing the markdown html"""
-
-        # fmt: off
-        markdown_tags = {
-            "h1", "h2", "h3", "h4", "h5", "h6",
-            "b", "i", "strong", "em", "tt",
-            "p", "br",
-            "span", "div", "blockquote", "code", "pre", "hr",
-            "ul", "ol", "li", "dd", "dt",
-            "a",
-            "sub", "sup",
-        }
-        # fmt: on
-
-        return set(markdown_tags)
-
-    @staticmethod
-    def get_allowed_markdown_attributes() -> dict[str, set[str]]:
-        """Get the html attributes that are allowed when sanitizing the markdown html"""
-
-        markdown_attrs = {"*": {"id"}, "a": {"href", "alt", "title"}}
-
-        return markdown_attrs

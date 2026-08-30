@@ -176,11 +176,3 @@ class TestPdf(TestCase):
         created_pdf = Pdf.objects.create(name='bla', collection=created_ws.collections[0])
 
         self.assertEqual(created_ws, created_pdf.workspace)
-
-    def test_notes_html(self):
-        self.pdf.notes = '**Code:** `print("PdfDing")`'
-        self.assertEqual(self.pdf.notes_html, '<p><strong>Code:</strong> <code>print("PdfDing")</code></p>')
-
-    def test_notes_html_sanitize(self):
-        self.pdf.notes = '**Danger:** <script>alert("test")</script>'
-        self.assertEqual(self.pdf.notes_html, '<p><strong>Danger:</strong> </p>')

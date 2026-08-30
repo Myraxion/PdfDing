@@ -23,7 +23,6 @@ class PdfDetailsE2ETestCase(PdfDingE2ETestCase):
             collection=self.user.profile.current_collection,
             name='pdf_1_1',
             description='this is number 1',
-            notes='some notes',
         )
 
         tag = Tag.objects.create(name='tag', workspace=self.user.profile.current_workspace)
@@ -47,7 +46,6 @@ class PdfDetailsE2ETestCase(PdfDingE2ETestCase):
             expect(self.page.locator("#collection")).to_contain_text("Default")
             expect(self.page.locator("#name")).to_contain_text("pdf_1_1")
             expect(self.page.locator("#description")).to_contain_text("this is number 1")
-            expect(self.page.locator("#notes")).to_contain_text("some notes")
             expect(self.page.locator("#tags")).to_contain_text("#tag")
             expect(self.page.locator("#progress")).to_contain_text("10% - Page 1 of 10")
             expect(self.page.locator("#views")).to_contain_text("1001")
@@ -71,7 +69,6 @@ class PdfDetailsE2ETestCase(PdfDingE2ETestCase):
     @patch('pdf.services.pdf_services.get_file_path', return_value='application/pdf')
     def test_change_details(self, mock_get_file_path):
         pdf = self.user.profile.current_pdfs.get(name='pdf_1_1')
-        pdf.notes = ''
         pdf.description = ''
         pdf.save()
         pdf.tags.set([])
@@ -98,14 +95,6 @@ class PdfDetailsE2ETestCase(PdfDingE2ETestCase):
             self.page.locator("#id_description").fill("other description")
             self.page.get_by_role("button", name="Submit").click()
             expect(self.page.locator("#description")).to_contain_text("other description")
-
-            # edit notes
-            expect(self.page.locator("#notes")).to_contain_text("No Notes Available")
-            self.page.locator("#notes-edit").click()
-            self.page.locator("#id_notes").click()
-            self.page.locator("#id_notes").fill("other notes")
-            self.page.get_by_role("button", name="Submit").click()
-            expect(self.page.locator("#notes")).to_contain_text("other notes")
 
             # edit tags
             expect(self.page.locator("#tags")).to_contain_text("No Tags Available")
@@ -161,7 +150,7 @@ class PdfDetailsE2ETestCase(PdfDingE2ETestCase):
         with sync_playwright() as p:
             self.open(reverse('pdf_details', kwargs={'identifier': pdf.id}), p)
 
-            for edit_name in ['#name-edit', '#description-edit', '#notes-edit', '#tags-edit']:
+            for edit_name in ['#name-edit', '#description-edit', '#tags-edit']:
                 expect(self.page.locator(edit_name)).to_contain_text("Edit")
                 self.page.locator(edit_name).click()
                 expect(self.page.locator(edit_name)).to_contain_text("Cancel")

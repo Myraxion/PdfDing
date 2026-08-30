@@ -62,7 +62,6 @@ class TestAddPDFMixin(TestCase):
                 'name': 'some_pdf',
                 'tag_string': 'tag_a tag_2',
                 'description': 'some_description',
-                'notes': 'some_notes',
                 'file_directory': 'some/dir',
                 'collection': self.user.profile.current_collection.id,
             },
@@ -78,7 +77,6 @@ class TestAddPDFMixin(TestCase):
         pdf = self.user.profile.current_pdfs.get(name='some_pdf')
         tag_names = [tag.name for tag in pdf.tags.all()]
         self.assertEqual(set(tag_names), {'tag_2', 'tag_a'})
-        self.assertEqual(pdf.notes, 'some_notes')
         self.assertEqual(pdf.description, 'some_description')
         self.assertEqual(pdf.file_directory, 'some/dir')
         self.assertEqual(pdf.collection, self.user.profile.current_collection)
@@ -97,7 +95,6 @@ class TestAddPDFMixin(TestCase):
                 'name': 'some_pdf',
                 'tag_string': 'tag_a tag_2',
                 'description': 'some_description',
-                'notes': 'some_notes',
                 'file_directory': 'some/dir',
                 'collection': other_user.profile.current_collection_id,
             },
@@ -265,7 +262,6 @@ class TestBulkAddPDFMixin(TestCase):
             data={
                 'tag_string': 'tag_a tag_2',
                 'description': 'some_description',
-                'notes': 'some_notes',
                 'collection': self.user.profile.current_collection.id,
             },
             profile=self.user.profile,
@@ -282,7 +278,6 @@ class TestBulkAddPDFMixin(TestCase):
             tag_names = [tag.name for tag in pdf.tags.all()]
             self.assertEqual(set(tag_names), {'tag_2', 'tag_a'})
             self.assertEqual(pdf.description, 'some_description')
-            self.assertEqual(pdf.notes, 'some_notes')
             self.assertEqual(pdf.collection, self.user.profile.current_collection)
             # check that pdf pages are set to -1 in case of exception.
             # in this test there should be an exception as a mock file is used.
@@ -634,7 +629,6 @@ class TestEditPdfMixin(TestCase):
             collection=self.user.profile.current_collection,
             name='pdf_name',
             description='some_description',
-            notes='some_note',
         )
         tags = [Tag.objects.create(name=f'tag_{i}', workspace=self.user.profile.current_workspace) for i in range(2)]
         pdf.tags.set(tags)
@@ -642,8 +636,8 @@ class TestEditPdfMixin(TestCase):
         edit_pdf_mixin_object = pdf_views.EditPdfMixin()
 
         for field, form_class, field_value in zip(
-            ['collection', 'name', 'description', 'tags', 'notes'],
-            [forms.PdfCollectionForm, forms.NameForm, forms.DescriptionForm, forms.PdfTagsForm, forms.NotesForm],
+            ['collection', 'name', 'description', 'tags'],
+            [forms.PdfCollectionForm, forms.NameForm, forms.DescriptionForm, forms.PdfTagsForm],
             [self.user.profile.current_collection_name, 'pdf_name', 'some_description', 'tag_0 tag_1', 'some_note'],
         ):
             form = edit_pdf_mixin_object.get_edit_form_get(field, pdf)
@@ -789,21 +783,6 @@ class TestViews(TestCase):
 
         self.assertEqual(response.context['current_page'], '20')
 
-    def test_get_notes_no_htmx(self):
-        pdf = Pdf.objects.create(collection=self.user.profile.current_collection, name='pdf')
-        response = self.client.get(reverse('get_notes', kwargs={'identifier': pdf.id}))
-
-        self.assertRedirects(response, reverse('pdf_overview'), status_code=302)
-
-    def test_get_notes_htmx(self):
-        pdf = Pdf.objects.create(collection=self.user.profile.current_collection, name='pdf', notes='PdfDing')
-        headers = {'HTTP_HX-Request': 'true'}
-
-        response = self.client.get(reverse('get_notes', kwargs={'identifier': pdf.id}), **headers)
-
-        self.assertEqual(response.context['pdf_notes'], '<p>PdfDing</p>')
-        self.assertTemplateUsed(response, 'partials/notes.html')
-
     def test_show_preview_no_htmx(self):
         pdf = Pdf.objects.create(collection=self.user.profile.current_collection, name='pdf')
         response = self.client.get(reverse('show_preview', kwargs={'identifier': pdf.id}))
@@ -811,7 +790,7 @@ class TestViews(TestCase):
         self.assertRedirects(response, reverse('pdf_overview'), status_code=302)
 
     def test_show_preview_htmx(self):
-        pdf = Pdf.objects.create(collection=self.user.profile.current_collection, name='pdf', notes='PdfDing')
+        pdf = Pdf.objects.create(collection=self.user.profile.current_collection, name='pdf', description='PdfDing')
         headers = {'HTTP_HX-Request': 'true'}
 
         response = self.client.get(reverse('show_preview', kwargs={'identifier': pdf.id}), **headers)

@@ -2,8 +2,8 @@ from base import base_views
 from django.db.models import QuerySet
 from django.db.models.functions import Lower
 from django.http import HttpRequest
-from pdf.forms import AddForm, DescriptionForm, NameForm, NotesForm
-from pdf.models.pdf_models import Pdf
+from pdf.forms import AddForm, DescriptionForm, NameForm, PdfTagsForm
+from pdf.models.pdf_models import Pdf, Tag
 
 
 class BaseMixin:
@@ -88,11 +88,11 @@ class SharedMixin(BaseMixin):
 
 class EditMixin(ObjectMixin):
     obj_class = Pdf
-    fields_requiring_extra_processing = ['description']
+    fields_requiring_extra_processing = ['tags']
 
     @staticmethod
     def get_edit_form_dict():
-        form_dict = {'description': DescriptionForm, 'name': NameForm, 'notes': NotesForm}
+        form_dict = {'description': DescriptionForm, 'name': NameForm, 'tags': PdfTagsForm}
 
         return form_dict
 
@@ -110,9 +110,12 @@ class EditMixin(ObjectMixin):
 
     @staticmethod
     def process_field(field_name, pdf, request, form_data):
-        if field_name == 'description':
-            pdf.description = f'processed_{form_data['description']}'
-            pdf.save()
+        if field_name == 'tags':
+            tag_string = form_data.get('tag_string', '')
+
+            tag = Tag.objects.create(name=tag_string, workspace=request.user.profile.current_workspace)
+
+            pdf.tags.set([tag])
 
 
 class Add(BaseAddMixin, base_views.BaseAdd):

@@ -11,13 +11,6 @@
         </svg>
     </a>
 </div>
-<p id="notes" x-show="show_additional" x-cloak>
-    {{ form.notes.errors }}
-    {{ form.notes }}
-    <span class="helptext" id="{{ form.notes.auto_id }}_helptext">
-        {{ form.notes.help_text|safe }}
-    </span>
-</p>
 {% if ALLOW_PDF_SUB_DIRECTORIES %}
 <p id="file_directory" x-show="show_additional" x-cloak>
     {{ form.file_directory.errors }}

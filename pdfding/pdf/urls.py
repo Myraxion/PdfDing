@@ -20,7 +20,6 @@ urlpatterns = [
     path('get/<identifier>/<revision>', pdf_views.Serve.as_view(), name='serve_pdf'),
     path('get_thumbnail/<identifier>', pdf_views.ServeThumbnail.as_view(), name='serve_thumbnail'),
     path('get_preview/<identifier>', pdf_views.ServePreview.as_view(), name='serve_preview'),
-    path('get_notes/<identifier>', pdf_views.GetNotes.as_view(), name='get_notes'),
     path('show_preview/<identifier>', pdf_views.ShowPreview.as_view(), name='show_preview'),
     path('update_minutes_spent_reading', pdf_views.UpdateMinutesSpent.as_view(), name='update_minutes_spent_reading'),
     path('update_page', pdf_views.UpdatePage.as_view(), name='update_page'),

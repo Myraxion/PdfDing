@@ -100,40 +100,6 @@ class NoPdfE2ETestCase(PdfDingE2ETestCase):
         dummy_file_path.unlink()
 
     @patch('pdf.forms.magic.from_buffer', return_value='application/pdf')
-    def test_add_pdf_notes(self, mock_from_buffer):
-        # this also tests the overview
-
-        # just use some dummy file for uploading
-        dummy_file_path = Path(__file__).parent / 'dummy.pdf'
-        with open(dummy_file_path, 'w') as f:
-            f.write('Some text')
-
-        with sync_playwright() as p:
-            self.open(reverse('add_pdf'), p)
-
-            # assert notes field not visible at the beginning
-            expect(self.page.locator("#notes")).not_to_be_visible()
-
-            # add pdf and open notes field
-            self.page.get_by_label("Use PDF Title").check()
-            self.page.locator("#id_file").click()
-            self.page.locator("#id_file").set_input_files(dummy_file_path)
-            self.page.locator("#show_additional").click()
-            expect(self.page.locator("#notes")).to_be_visible()
-            self.page.get_by_placeholder("Add Notes").click()
-            self.page.get_by_placeholder("Add Notes").fill("some note")
-
-            # assert collapsing notes field is working
-            self.page.locator("#show_additional").click()
-            expect(self.page.locator("#notes")).not_to_be_visible()
-
-            self.page.get_by_role("button", name="Submit").click()
-            expect(self.page.locator("body")).to_contain_text("dummy")
-            expect(self.page.locator("#show-notes-1")).to_be_visible()
-
-        dummy_file_path.unlink()
-
-    @patch('pdf.forms.magic.from_buffer', return_value='application/pdf')
     def test_add_file_directory(self, mock_from_buffer):
         # just use some dummy file for uploading
         dummy_file_path = Path(__file__).parent / 'dummy.pdf'
@@ -143,10 +109,10 @@ class NoPdfE2ETestCase(PdfDingE2ETestCase):
         with sync_playwright() as p:
             self.open(reverse('add_pdf'), p)
 
-            # assert notes field not visible at the beginning
+            # assert field not visible at the beginning
             expect(self.page.locator("#file_directory")).not_to_be_visible()
 
-            # add pdf and open notes field
+            # add pdf and open field
             self.page.get_by_placeholder("Add PDF Name").click()
             self.page.get_by_placeholder("Add PDF Name").fill("some_random_name")
             self.page.locator("#id_file").click()
@@ -156,7 +122,7 @@ class NoPdfE2ETestCase(PdfDingE2ETestCase):
             self.page.get_by_placeholder("Add File Directory").click()
             self.page.get_by_placeholder("Add File Directory").fill("some/dir")
 
-            # assert collapsing notes field is working
+            # assert collapsing field is working
             self.page.locator("#show_additional").click()
             expect(self.page.locator("#file_directory")).not_to_be_visible()
 
@@ -236,38 +202,6 @@ class NoPdfE2ETestCase(PdfDingE2ETestCase):
             path.unlink()
 
     @patch('pdf.forms.magic.from_buffer', return_value='application/pdf')
-    def test_bulk_add_notes(self, mock_from_buffer):
-        # just use some dummy file for uploading
-        dummy_file_path = Path(__file__).parent / 'dummy.pdf'
-        with open(dummy_file_path, 'w') as f:
-            f.write('Some text')
-
-        with sync_playwright() as p:
-            self.open(reverse('bulk_add_pdfs'), p)
-
-            # assert notes field not visible at the beginning
-            expect(self.page.locator("#notes")).not_to_be_visible()
-
-            # add pdf and open notes field
-            self.page.locator("#id_file").click()
-            self.page.locator("#id_file").set_input_files([dummy_file_path])
-
-            self.page.locator("#show_additional").click()
-            expect(self.page.locator("#notes")).to_be_visible()
-            self.page.get_by_placeholder("Add Notes").click()
-            self.page.get_by_placeholder("Add Notes").fill("some note")
-
-            # assert collapsing notes field is working
-            self.page.locator("#show_additional").click()
-            expect(self.page.locator("#notes")).not_to_be_visible()
-
-            self.page.get_by_role("button", name="Submit").click()
-            expect(self.page.locator("body")).to_contain_text("dummy")
-            expect(self.page.locator("#show-notes-1")).to_be_visible()
-
-        dummy_file_path.unlink()
-
-    @patch('pdf.forms.magic.from_buffer', return_value='application/pdf')
     def test_bulk_add_file_directory(self, mock_from_buffer):
         # just use some dummy file for uploading
         dummy_file_path = Path(__file__).parent / 'dummy.pdf'
@@ -277,10 +211,10 @@ class NoPdfE2ETestCase(PdfDingE2ETestCase):
         with sync_playwright() as p:
             self.open(reverse('bulk_add_pdfs'), p)
 
-            # assert notes field not visible at the beginning
+            # assert field not visible at the beginning
             expect(self.page.locator("#file_directory")).not_to_be_visible()
 
-            # add pdf and open notes field
+            # add pdf and open field
             self.page.locator("#id_file").click()
             self.page.locator("#id_file").set_input_files([dummy_file_path])
 
@@ -289,7 +223,7 @@ class NoPdfE2ETestCase(PdfDingE2ETestCase):
             self.page.get_by_placeholder("Add File Directory").click()
             self.page.get_by_placeholder("Add File Directory").fill("some/dir")
 
-            # assert collapsing notes field is working
+            # assert collapsing field is working
             self.page.locator("#show_additional").click()
             expect(self.page.locator("#file_directory")).not_to_be_visible()
 
@@ -371,30 +305,6 @@ class PdfOverviewE2ETestCase(PdfDingE2ETestCase):
             expect(self.page.locator("#pdf-15")).to_be_visible()
             expect(self.page.locator("#pdf-15")).to_contain_text('pdf_page_2')
             expect(self.page.locator("#next_page_2_toggle")).not_to_be_visible()
-
-    def test_notes(self):
-        pdf = Pdf.objects.get(name='pdf_4_14')
-        pdf.notes = 'some markdown notes'
-        pdf.save()
-
-        with sync_playwright() as p:
-            self.open(f"{reverse('pdf_overview')}?search=pdf_4_14", p)
-            expect(self.page.locator("#show-notes-1")).to_be_visible()
-            expect(self.page.locator("#notes-1")).not_to_be_visible()
-            self.page.locator("#show-notes-1").click()
-            expect(self.page.locator("#notes-1")).to_be_visible()
-            expect(self.page.locator("#notes-1")).to_contain_text("some markdown notes")
-            self.page.locator("#show-notes-1").click()
-            expect(self.page.locator("#notes-1")).not_to_be_visible()
-
-    def test_no_notes(self):
-        pdf = Pdf.objects.get(name='pdf_4_14')
-        pdf.notes = ''
-        pdf.save()
-
-        with sync_playwright() as p:
-            self.open(f"{reverse('pdf_overview')}?search=pdf_4_14", p)
-            expect(self.page.locator("#show-notes-1")).not_to_be_visible()
 
     def test_star(self):
         with sync_playwright() as p:

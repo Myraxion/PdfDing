@@ -58,7 +58,6 @@ class AddPdfMixin(BasePdfMixin):
         collection = Collection.objects.get(id=collection_id)
         name = form.cleaned_data['name']
         description = form.cleaned_data.get('description', '')
-        notes = form.cleaned_data.get('notes', '')
         tag_string = form.cleaned_data.get('tag_string', '')
         file_directory = form.cleaned_data.get('file_directory', '')
 
@@ -72,7 +71,6 @@ class AddPdfMixin(BasePdfMixin):
             collection=collection,
             pdf_file=pdf_file,
             description=description,
-            notes=notes,
             tag_string=tag_string,
             file_directory=file_directory,
             use_pdf_title=form.cleaned_data.get('use_pdf_title'),
@@ -106,7 +104,6 @@ class BulkAddPdfMixin(BasePdfMixin):
 
         collection = Collection.objects.get(id=collection_id)
         description = form.cleaned_data.get('description', '')
-        notes = form.cleaned_data.get('notes', '')
         tag_string = form.cleaned_data.get('tag_string', '')
         file_directory = form.cleaned_data.get('file_directory', '')
         workspace = collection.workspace
@@ -130,7 +127,6 @@ class BulkAddPdfMixin(BasePdfMixin):
                     collection=collection,
                     pdf_file=file,
                     description=description,
-                    notes=notes,
                     file_directory=file_directory,
                     tag_string=tag_string,
                     use_pdf_title=True,
@@ -212,7 +208,7 @@ class OverviewMixin(BasePdfMixin):
     @staticmethod
     def advanced_search_filtering(pdfs: QuerySet, query_dict: dict) -> QuerySet:
         details_filter_dict = {
-            f'{key}__icontains': value for key, value in query_dict.items() if key in ['description', 'notes']
+            f'{key}__icontains': value for key, value in query_dict.items() if key in ['description']
         }
         metadata_filter_dict = {
             f'metadata__{key}__icontains': value
@@ -317,7 +313,6 @@ class EditPdfMixin(PdfMixin):
             'description': forms.DescriptionForm,
             'name': forms.NameForm,
             'tags': forms.PdfTagsForm,
-            'notes': forms.NotesForm,
             'file_directory': forms.FileDirectoryForm,
         }
 
@@ -332,7 +327,6 @@ class EditPdfMixin(PdfMixin):
             'collection': {'collection': pdf.collection.name},
             'name': {'name': pdf.name},
             'description': {'description': pdf.description},
-            'notes': {'notes': pdf.notes},
             'file_directory': {'file_directory': pdf.file_directory},
             'tags': {'tag_string': ' '.join(sorted([tag.name for tag in pdf.tags.all()]))},
         }
@@ -599,20 +593,6 @@ class ViewerView(PdfMixin, View):
                 'keep_screen_awake': request.user.profile.pdf_keep_screen_awake,
             },
         )
-
-
-class GetNotes(PdfMixin, View):
-    """View for getting a pdf's markdown notes as html, so it can be displayed via htmx."""
-
-    def get(self, request: HttpRequest, identifier: str):
-        """Get a pdf's markdown notes as html"""
-
-        if request.htmx:
-            pdf = self.get_object(request, identifier)
-
-            return render(request, 'partials/notes.html', {'pdf_notes': pdf.notes_html})
-
-        return redirect('pdf_overview')
 
 
 class UpdatePage(PdfMixin, View):
@@ -1070,7 +1050,6 @@ class AdvancedSearch(View):
             'keywords',
             'journal',
             'name',
-            'notes',
             'publisher',
             'tags',
             'title',

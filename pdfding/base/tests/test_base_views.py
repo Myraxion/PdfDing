@@ -263,31 +263,34 @@ class TestViews(TestCase):
 
     @override_settings(ROOT_URLCONF=__name__)
     def test_edit_post_not_name_not_processed(self):
-        pdf = Pdf.objects.create(name='pdf', collection=self.user.profile.current_collection, notes='something')
-
-        self.client.post(
-            reverse('test_edit', kwargs={'identifier': pdf.id, 'field_name': 'notes'}),
-            data={'notes': 'new'},
-        )
-
-        # get pdf again with the changes
-        pdf = self.user.profile.all_pdfs.get(id=pdf.id)
-
-        self.assertEqual(pdf.notes, 'new')
-
-    @override_settings(ROOT_URLCONF=__name__)
-    def test_edit_post_processed(self):
         pdf = Pdf.objects.create(name='pdf', collection=self.user.profile.current_collection, description='something')
 
         self.client.post(
             reverse('test_edit', kwargs={'identifier': pdf.id, 'field_name': 'description'}),
-            data={'description': 'other'},
+            data={'description': 'new'},
         )
 
         # get pdf again with the changes
         pdf = self.user.profile.all_pdfs.get(id=pdf.id)
 
-        self.assertEqual(pdf.description, 'processed_other')
+        self.assertEqual(pdf.description, 'new')
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_edit_post_processed(self):
+        pdf = Pdf.objects.create(name='pdf', collection=self.user.profile.current_collection)
+
+        self.client.post(
+            reverse('test_edit', kwargs={'identifier': pdf.id, 'field_name': 'tags'}),
+            data={'tag_string': 'some_tag'},
+        )
+
+        # get pdf again with the changes
+        pdf = self.user.profile.all_pdfs.get(id=pdf.id)
+
+        assert pdf.tags.count() == 1
+        tag = pdf.tags.first()
+        assert tag.name == 'some_tag'
+        assert tag.workspace == self.user.profile.current_workspace
 
 
 # we need the TransactionTestCase class because otherwise django_cleanup will not delete the file

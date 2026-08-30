@@ -55,7 +55,6 @@ class PdfProcessingServices:
         collection: Collection,
         pdf_file: File,
         description: str = '',
-        notes: str = '',
         tag_string: str = '',
         file_directory: str = '',
         use_pdf_title: bool = False,
@@ -72,7 +71,6 @@ class PdfProcessingServices:
         pdf = Pdf.objects.create(
             name=pdf_name,
             description=description,
-            notes=notes,
             file=pdf_file,
             file_directory=file_directory,
             collection=collection,

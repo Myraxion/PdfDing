@@ -46,7 +46,6 @@ class TestPdfProcessingServices(TestCase):
         self.assertEqual(pdf.collection, collection)
         self.assertEqual(pdf.description, description)
         self.assertEqual(pdf.file_directory, file_directory)
-        self.assertEqual(pdf.notes, '')
         self.assertEqual(pdf.number_of_pages, 5)
         self.assertTrue(pdf.preview)
         self.assertTrue(pdf.thumbnail)

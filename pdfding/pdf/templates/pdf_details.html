@@ -139,32 +139,6 @@
             </div>
         </div>
         {% include 'includes/details_field.html' with field='description' field_value=pdf.description field_title=description_trans edit_url='edit_pdf' obj_id=pdf.id %}
-        <div class="pt-2 flex flex-row items-center gap-x-3">
-            <span class="text-lg font-bold">{% trans 'Notes' %}</span>
-            <div>
-                <a id="notes-edit" class="cursor-pointer text-primary hover:text-secondary"
-                    hx-get="{% url 'edit_pdf' identifier=pdf.id field_name='notes' %}"
-                    hx-target="#notes"
-                    hx-swap="innerHTML" >
-                    {{ edit }}
-                </a>
-            </div>
-        </div>
-        <div class="flex justify-between text-slate-600 dark:text-slate-400">
-            <div class="w-full">
-                {% if pdf.notes %}
-                <div id="notes">
-                    <div class="markdown py-1 px-2 mr-2 md:mr-0! rounded-sm bg-slate-100 dark:bg-slate-700!">
-                    {{ pdf.notes_html }}
-                    </div>
-                </div>
-                {% else %}
-                <span id="notes" class="text-sm">
-                  {% trans 'No Notes Available' %}
-                </span>
-                {% endif %}
-            </div>
-        </div>
         {% if ALLOW_PDF_SUB_DIRECTORIES %}
         {% include 'includes/details_field.html' with field='file_directory' field_value=pdf.file_directory field_title=file_directory_trans edit_url='edit_pdf' obj_id=pdf.id %}
         {% endif %}
