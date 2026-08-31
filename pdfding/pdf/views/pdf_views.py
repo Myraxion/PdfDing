@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from base import base_views
+from base.service import FuzzyMatch
 from core.settings import MEDIA_ROOT
 from django.conf import settings
 from django.contrib import messages
@@ -22,7 +23,6 @@ from pdf.services.collection_services import change_collection_of_pdf
 from pdf.services.pdf_services import PdfProcessingServices
 from pdf.services.tag_services import TagServices
 from pdf.services.workspace_services import check_if_collection_part_of_workspace, get_pdfs_of_workspace
-from rapidfuzz import fuzz, utils
 from users.models import Profile
 from users.service import get_demo_pdf, get_viewer_theme_and_color
 
@@ -191,17 +191,16 @@ class OverviewMixin(BasePdfMixin):
 
     @staticmethod
     def fuzzy_filter_pdfs(pdfs: QuerySet, search: str) -> QuerySet:
-        fuzzy_result = []
+        filter_results = []
+        search = search.strip().lower()
 
         for pdf in pdfs:
-            w_ratio = fuzz.WRatio(search, pdf.name, processor=utils.default_process)
-            partial_ratio = fuzz.partial_ratio(search, pdf.name, processor=utils.default_process)
+            pdf_name = pdf.name.lower()
 
-            # better to be a bit more strict regarding this so we avoid false positives
-            if (w_ratio + partial_ratio) / 2 > 85 or partial_ratio > 95:
-                fuzzy_result.append(pdf.id)
+            if FuzzyMatch.is_fuzzy_match(search, pdf_name):
+                filter_results.append(pdf.id)
 
-        pdfs = pdfs.filter(id__in=fuzzy_result)
+        pdfs = pdfs.filter(id__in=filter_results)
 
         return pdfs
 

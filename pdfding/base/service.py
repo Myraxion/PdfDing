@@ -1,3 +1,4 @@
+from difflib import SequenceMatcher
 from urllib.parse import parse_qs, urlparse
 
 from django.urls import reverse
@@ -101,3 +102,73 @@ def construct_query_overview_url(
         overview_url = f'{overview_url}?{query_string}'
 
     return overview_url
+
+
+class FuzzyMatch:
+    @classmethod
+    def is_fuzzy_match(cls, search: str, b: str) -> bool:
+        """Check if the search is a fuzzy match of string b"""
+
+        if search in b:
+            match = True
+        else:
+            match = False
+
+            # blanks to be considered junk
+            sequence_matcher = SequenceMatcher(lambda x: x == ' ', search, b)
+            ratio = sequence_matcher.ratio()
+
+            if ratio > 0.6:
+                # using a low ratio is bit conservative but we do not want too many false positives
+                match = True
+            else:
+                partial_ratio = cls.get_partial_ratio(search, b)
+
+                # using a low ratio is bit conservative but we do not want too many false positives
+                if partial_ratio > 0.7:
+                    match = True
+        return match
+
+    @classmethod
+    def get_partial_ratio(cls, search: str, b: str) -> float:
+        """Get the partial match ratio between two strings using difflib's sequence_matcher"""
+
+        search_words = search.split()
+
+        number_of_search_words = len(search_words)
+        b_words = b.split()
+        number_of_words_b = len(b_words)
+
+        ratio = 0
+
+        if number_of_words_b > number_of_search_words:
+            partials = cls.get_partials(b_words, number_of_search_words)
+
+            for partial in partials:
+                sequence_matcher = SequenceMatcher(lambda x: x == ' ', search, partial)
+                ratio = max(ratio, sequence_matcher.ratio())
+
+        return ratio
+
+    @staticmethod
+    def get_partials(b_words: list[str], number_of_words_a: int) -> list[str]:
+        """
+        Get partial sentences of a list of words.
+
+        E.g. b_words = [one two three four]
+        number_of_words_a: 2 -> ['one two', 'two three', 'three four']
+        number_of_words_a: 3 -> ['one two three', 'two three four']
+        """
+
+        number_of_words_b = len(b_words)
+
+        if number_of_words_a > number_of_words_b or number_of_words_a < 1:
+            return []
+
+        else:
+            partials = [
+                (' ').join(b_words[i : i + number_of_words_a])  # noqa: E203
+                for i in range(number_of_words_b - number_of_words_a + 1)
+            ]
+
+            return partials

@@ -22,7 +22,6 @@ pypdfium2 = "==5.12.1"
 pypdf = "==6.15.0"
 python-magic = "==0.4.27"
 qrcode = { extras = ["pil"], version = "==8.2" }
-RapidFuzz = "==3.14.5"
 whitenoise = { extras = ["brotli"], version = "==6.12.0" }
 
 [tool.poetry.group.dev.dependencies]

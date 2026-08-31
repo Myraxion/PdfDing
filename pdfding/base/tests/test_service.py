@@ -1,6 +1,11 @@
 from unittest.mock import patch
 
-from base.service import construct_query_overview_url, construct_search_and_tag_queries, process_raw_search_query
+from base.service import (
+    FuzzyMatch,
+    construct_query_overview_url,
+    construct_search_and_tag_queries,
+    process_raw_search_query,
+)
 from django.test import TestCase
 from django.urls import reverse
 
@@ -62,3 +67,26 @@ class TestService(TestCase):
         generated_url = construct_query_overview_url(referer_url, '', 'starred', '', 'pdf')
 
         self.assertEqual(generated_url, f'{reverse('pdf_overview')}?search=searching&tags=asd&selection=starred')
+
+
+class TestFuzzyMatch(TestCase):
+    def test_is_fuzzy_match(self):
+        assert FuzzyMatch.is_fuzzy_match('substring', 'substring in senctence')
+        assert FuzzyMatch.is_fuzzy_match('the sencence quite simil', 'The Sentence is quite similar.')
+        assert FuzzyMatch.is_fuzzy_match('substrinn i', 'substring in senctence')
+        assert not FuzzyMatch.is_fuzzy_match('no match i', 'this should not work')
+
+    def test_get_partial_ratio(self):
+        assert FuzzyMatch.get_partial_ratio('substrinn', 'this is a substring plus word') > 0.85
+        assert FuzzyMatch.get_partial_ratio('other', 'this is a substring plus word') < 0.5
+        assert FuzzyMatch.get_partial_ratio('too many words', 'bla') == 0
+
+    def test_get_partials(self):
+        test_words = ['a', 'b', 'c', 'd', 'e']
+
+        assert not FuzzyMatch.get_partials(test_words, 6)
+        assert not FuzzyMatch.get_partials(test_words, 0)
+        assert FuzzyMatch.get_partials(test_words, 1) == test_words
+        assert FuzzyMatch.get_partials(test_words, 2) == ['a b', 'b c', 'c d', 'd e']
+        assert FuzzyMatch.get_partials(test_words, 3) == ['a b c', 'b c d', 'c d e']
+        assert FuzzyMatch.get_partials(test_words, 5) == ['a b c d e']
