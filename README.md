@@ -16,6 +16,8 @@
   <a href="https://docs.pdfding.com">Docs</a>
   <span>&nbsp;•&nbsp;</span>
   <a href="https://docs.pdfding.com/getting_started/docker/">Get Started</a>
+  <span>&nbsp;•&nbsp;</span>
+  <a href="https://www.pdfding.com/donate">Donate</a>
 </p>
 <br/>
 
@@ -65,6 +67,17 @@ You can deploy PdfDing [via PikaPods](https://www.pikapods.com/pods?run=pdfding)
 and get started in less than two minutes. Ideal for non-technical users that want to use PdfDing.
 
 PikaPods donates 20% of the fees people like you pay to run PdfDing on their servers to PdfDing.
+
+## Donate
+
+Donating money is important: it makes PdfDing sustainable. Currently, donations
+can be provided directly to the creator of PdfDing via Liberapay and Ko-fi:
+
+<p align="center">
+  <a href="https://liberapay.com/mrmn/donate" target="_blank"><img height='36' src="https://liberapay.com/assets/widgets/donate.svg"></a>
+  <span>&nbsp;&nbsp;&nbsp;</span>
+  <a href='https://ko-fi.com/mrmn' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi5.png?v=6' border='0' alt='Donate' /></a>
+</p>
 
 ## Contributing
 
