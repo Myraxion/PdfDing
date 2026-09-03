@@ -1,7 +1,7 @@
-FROM python:3.12.13-alpine AS python-base
+FROM python:3.12.14-alpine AS python-base
 
 # The frontend build image , used to create the css and js files
-FROM node:24.19.0-trixie-slim AS npm-build
+FROM node:24.20.0-trixie-slim AS npm-build
 
 # do not add the 'v' of the version, only use x.y.z instead of vx.y.z
 

@@ -20,7 +20,7 @@ clone:
 
 steps:
   code-quality:
-    image: python:3.12.13-slim
+    image: python:3.12.14-slim
     depends_on: []
     commands:
       - pip install poetry==2.4.1
@@ -29,7 +29,7 @@ steps:
       - poetry run black . --check
       - poetry run bandit -x "**/tests/*,**/e2e/*" -r .
   unit-tests:
-    image: python:3.12.13-slim
+    image: python:3.12.14-slim
     depends_on: []
     commands:
       - apt-get update && apt-get install --no-install-recommends -y libmagic1
@@ -38,7 +38,7 @@ steps:
       - cd pdfding
       - poetry run pytest --ignore=e2e --cov=admin --cov=base --cov=pdf --cov=users --cov-fail-under=100
   e2e-tests:
-    image: node:24.19.0-trixie-slim
+    image: node:24.20.0-trixie-slim
     depends_on: []
     commands:
       - apt-get update && apt-get install --no-install-recommends -y ca-certificates curl libmagic1 python3 python3-pip pipx unzip
