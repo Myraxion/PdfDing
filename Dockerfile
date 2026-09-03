@@ -32,6 +32,7 @@ RUN rm pdfding/static/css/input.css
 
 # The build image, used to build the virtual python environment
 FROM python-base AS python-build
+ARG PYTHON_MINOR_VERSION=3.12
 
 RUN pip install poetry==2.2.1
 
@@ -47,8 +48,8 @@ COPY pyproject.toml poetry.lock ./
 # install python packages and clean up
 RUN poetry install --without dev --without e2e --no-root \
     && rm -rf $POETRY_CACHE_DIR \
-    && for i in pip wheel; do rm -rf /app/.venv/lib/python3.12/site-packages/$i*; done \
-    && for i in pip pip-3.12 pip3 pip3.12; do rm /app/.venv/bin/$i; done
+    && for i in pip wheel; do rm -rf /app/.venv/lib/python${PYTHON_MINOR_VERSION}/site-packages/$i*; done \
+    && for i in pip pip-${PYTHON_MINOR_VERSION} pip3 pip${PYTHON_MINOR_VERSION}; do rm /app/.venv/bin/$i; done
 
 COPY --from=npm-build /build/pdfding pdfding
 # prepare the static files for production
@@ -56,6 +57,9 @@ COPY --from=npm-build /build/pdfding pdfding
 ARG DEFAULT_THEME=''
 
 RUN poetry run pdfding/manage.py collectstatic
+# remove brotli because it is only needed for running collectstatic
+# poetry remove is not working
+RUN for i in _brotli.* brotli*; do rm -rf /app/.venv/lib/python${PYTHON_MINOR_VERSION}/site-packages/$i*; done
 
 # remove django md5 hash from filenames of pdfjs as it will mess up the relative imports because of the whitenoise setup
 RUN sh -x \
