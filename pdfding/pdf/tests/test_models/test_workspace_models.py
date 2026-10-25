@@ -12,6 +12,10 @@ class TestWorkspace(TestCase):
         self.other_user = User.objects.create_user(username='other_user', password='password')
 
     def test_delete(self):
+        self.ws.add_user_to_workspace(self.other_user, WorkspaceRoles.MEMBER)
+        self.other_user.profile.current_workspace_id = self.ws.id
+        self.other_user.profile.save()
+
         ws_path = get_workspace_path(self.ws)
         pdfs_path = ws_path / 'some_collection' / 'pdf'
         pdfs_path.mkdir(parents=True)
@@ -19,9 +23,13 @@ class TestWorkspace(TestCase):
         dummy_file_path = pdfs_path / 'dummy.pdf'
         dummy_file_path.touch()
 
+        assert self.other_user.profile.current_workspace_id == self.ws.id
+
         self.ws.delete()
 
-        self.assertFalse(ws_path.exists())
+        other_user = User.objects.get(id=self.other_user.id)
+        assert not ws_path.exists()
+        assert other_user.profile.current_workspace_id == str(self.other_user.id)
 
     def test_user_property(self):
         self.assertEqual(self.ws.users.count(), 1)

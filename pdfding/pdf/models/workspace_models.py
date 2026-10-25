@@ -39,6 +39,14 @@ class Workspace(models.Model):
         """
 
         ws_path = get_workspace_path(self)
+
+        # adjust current workspace for all workspace users if necessary
+        for user in self.users:
+            if user.profile.current_workspace_id == self.id:
+                # set to personal workspace
+                user.profile.current_workspace_id = user.id
+                user.profile.save()
+
         super().delete(*args, **kwargs)
 
         try:
