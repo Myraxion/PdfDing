@@ -1,4 +1,5 @@
 from base import base_views
+from base.base_views import PermissionLevel
 from django.db.models import QuerySet
 from django.db.models.functions import Lower
 from django.http import HttpRequest
@@ -13,6 +14,7 @@ class BaseMixin:
 class BaseAddMixin(BaseMixin):
     form = AddForm
     template_name = 'add_pdf.html'
+    permission_level = PermissionLevel.EDITOR
 
     def get_context_get(self, request: HttpRequest, __):
         context = {'form': self.form(profile=request.user.profile), 'other': 1234}
@@ -63,6 +65,8 @@ class OverviewMixin(BaseMixin):
 
 
 class ObjectMixin(BaseMixin):
+    permission_level = PermissionLevel.EDITOR
+
     @staticmethod
     def get_object(request: HttpRequest, pdf_id: str):
         """Get the pdf specified by the ID"""
@@ -75,6 +79,7 @@ class ObjectMixin(BaseMixin):
 
 class SharedMixin(BaseMixin):
     obj_name = 'shared_pdf'
+    permission_level = PermissionLevel.EDITOR
 
     @staticmethod
     def get_object(request: HttpRequest, shared_id: str):

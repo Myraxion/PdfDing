@@ -108,6 +108,8 @@ class OverviewQuery(base_views.BaseOverviewQuery):
 class DeleteProfile(BaseAdminRequiredMixin, AdminMixin, base_views.BaseDelete):
     """View for deleting a user profile"""
 
+    permission_level = base_views.PermissionLevel.ALL
+
     def get(self, request: HttpRequest, identifier: str):
         """Triggered by htmx. Display an inline form for deleting the user."""
 
@@ -129,6 +131,8 @@ class CreateUser(BaseAdminRequiredMixin, base_views.BaseAdd):
     template_name = 'admin_create_user.html'
     obj_name = 'user'
     form = CreateUserForm
+    # this is just needed for the base function, real check is via is admin required
+    permission_level = base_views.PermissionLevel.ALL
 
     def get_context_get(self, __, ___):  # pragma: no cover
         """Get the context needed to be passed to the template containing the form for creating a workspace."""

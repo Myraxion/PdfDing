@@ -1,7 +1,10 @@
 {% load static %}
 {% load i18n %}
+{% load pdf_tags %}
+{% can_edit request.user.profile.current_workspace request.user as editor %}
 <div class="relative">
     <div class="flex flex-row items-center gap-x-2">
+        {% if editor %}
         <a id="shared-obj-link-{{ loop_id }}"
            {% if page == 'shared_pdf_overview' %}
            href="{% url 'shared_pdf_details' shared_obj.id %}"
@@ -17,6 +20,17 @@
             {{ shared_obj.name }}
            {% endif %}
         </a>
+        {% else %}
+        <div
+           {% if shared_obj.inactive %}
+           class="truncate text-lg font-bold text-slate-400 dark:text-slate-500">
+            {{ shared_obj.name }}
+           {% else %}
+           class="truncate text-lg font-bold text-primary">
+            {{ shared_obj.name }}
+           {% endif %}
+        </div>
+        {% endif %}
     </div>
     <div class="font-semibold -mt-[3px]! truncate [&>span]:text-slate-500 dark:[&>span]:text-slate-300">
         {% if page == 'shared_pdf_overview' %}
@@ -62,6 +76,7 @@
             <a href="{% url 'view_pdf' shared_obj.pdf_id %}">{% trans 'View' %}</a>
             {% endif %}
         </div>
+        {% if editor %}
         <div id="delete_{{ loop_id }}" class="text-base [&>a]:cursor-pointer">
             <a x-show="delete_{{ loop_id }}" x-cloak
                hx-delete="
@@ -82,5 +97,6 @@
                 <span>{% trans 'Delete' %}</span>
             </a>
         </div>
+        {% endif %}
     </div>
 </div>

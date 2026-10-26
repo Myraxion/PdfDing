@@ -1,4 +1,5 @@
 from base import base_views
+from base.base_views import PermissionLevel, check_workspace_permissions
 from django.contrib import messages
 from django.http import HttpRequest
 from django.shortcuts import redirect, render
@@ -17,6 +18,7 @@ class BaseCollectionMixin:
 class CreateCollectionMixin(BaseCollectionMixin):
     form = CollectionForm
     template_name = 'create_collection.html'
+    permission_level = PermissionLevel.OWNER
 
     def get_context_get(self, request: HttpRequest, __):
         """Get the context needed to be passed to the template containing the form for creating a collection."""
@@ -39,6 +41,8 @@ class CreateCollectionMixin(BaseCollectionMixin):
 
 
 class CollectionMixin(BaseCollectionMixin):
+    permission_level = PermissionLevel.OWNER
+
     @staticmethod
     @check_object_access_allowed
     def get_object(request: HttpRequest, collection_id: str) -> Collection:
@@ -106,6 +110,7 @@ class Edit(EditCollectionMixin, base_views.BaseDetailsEdit):
 class Delete(CollectionMixin, base_views.BaseDelete):
     """View for deleting the collection specified by its ID."""
 
+    @check_workspace_permissions
     def get(self, request: HttpRequest, identifier: str):
         """Triggered by htmx. Display an inline form for deleting the collection."""
 

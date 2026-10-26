@@ -1,18 +1,22 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+from base.base_views import PermissionLevel, check_workspace_permissions
 from base.tests import base_view_definitions
 from core.settings import MEDIA_ROOT
 from core.urls import urlpatterns as base_patterns
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.http.response import HttpResponse
+from django.http.response import Http404, HttpResponse
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.urls import path, reverse
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 from pdf.forms import AddForm, DescriptionForm
 from pdf.models.pdf_models import Pdf
 from pdf.models.shared_models import SharedPdf
+from pdf.models.workspace_models import WorkspaceRoles
+from pdf.services.workspace_services import create_workspace
 from users.models import Profile
 
 test_patterns = [
@@ -35,6 +39,80 @@ def set_up(self):
     self.client = Client()
     self.user = User.objects.create_user(username=self.username, password=self.password, email='a@a.com')
     self.client.login(username=self.username, password=self.password)
+
+
+class TestDecorators(TestCase):
+    username = 'user'
+    password = '12345'
+
+    def setUp(self):
+        set_up(self)
+
+        self.other_user = User.objects.create_user(username='other_user', password='pw')
+        self.other_ws = create_workspace('other_ws', self.other_user)
+        self.other_user.profile.current_workspace_id = self.other_ws.id
+        self.other_user.profile.save()
+
+    @staticmethod
+    @check_workspace_permissions
+    def dummy_function(self, request, other):
+        return 'return_value'
+
+    def test_check_workspace_permissions(self):
+        self.other_user.profile.current_workspace.add_user_to_workspace(self.user, WorkspaceRoles.OWNER)
+        self.user.profile.current_workspace_id = self.other_ws.id
+        self.user.profile.current_collection_id = self.other_ws.id
+        self.user.profile.save()
+
+        mock = MagicMock
+        mock.permission_level = PermissionLevel.ALL
+
+        # get dummy request
+        response = self.client.get(reverse('pdf_overview'))
+        request = response.wsgi_request
+
+        # test permission all
+        assert self.dummy_function(mock, request, 'asd') == 'return_value'
+
+        # test permission owner
+        mock.permission_level = PermissionLevel.EDITOR
+        assert self.dummy_function(mock, request, 'asd') == 'return_value'
+
+        # test permission owner
+        mock.permission_level = PermissionLevel.OWNER
+        assert self.dummy_function(mock, request, 'asd') == 'return_value'
+
+    def test_check_workspace_permissions_not_owner(self):
+        self.other_user.profile.current_workspace.add_user_to_workspace(self.user, WorkspaceRoles.MEMBER)
+        self.user.profile.current_workspace_id = self.other_ws.id
+        self.user.profile.current_collection_id = self.other_ws.id
+        self.user.profile.save()
+
+        # get dummy request
+        response = self.client.get(reverse('pdf_overview'))
+        request = response.wsgi_request
+
+        mock = MagicMock
+        mock.permission_level = PermissionLevel.OWNER
+
+        with pytest.raises(Http404, match='User is not allowed to access the object!'):
+            self.dummy_function(mock, request, 'asd')
+
+    def test_check_workspace_permissions_not_editor(self):
+        self.other_user.profile.current_workspace.add_user_to_workspace(self.user, WorkspaceRoles.GUEST)
+        self.user.profile.current_workspace_id = self.other_ws.id
+        self.user.profile.current_collection_id = self.other_ws.id
+        self.user.profile.save()
+
+        # get dummy request
+        response = self.client.get(reverse('pdf_overview'))
+        request = response.wsgi_request
+
+        mock = MagicMock
+        mock.permission_level = PermissionLevel.EDITOR
+
+        with pytest.raises(Http404, match='User is not allowed to access the object!'):
+            self.dummy_function(mock, request, 'asd')
 
 
 class TestViews(TestCase):

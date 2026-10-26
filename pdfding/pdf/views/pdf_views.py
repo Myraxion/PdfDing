@@ -32,6 +32,8 @@ class BasePdfMixin:
 
 
 class AddPdfMixin(BasePdfMixin):
+    permission_level = base_views.PermissionLevel.EDITOR
+
     def __init__(self):
         self.template_name = 'add_pdf.html'
         if settings.DEMO_MODE:  # pragma: no cover
@@ -78,6 +80,8 @@ class AddPdfMixin(BasePdfMixin):
 
 
 class BulkAddPdfMixin(BasePdfMixin):
+    permission_level = base_views.PermissionLevel.EDITOR
+
     def __init__(self):
         self.template_name = 'bulk_add_pdf.html'
         if settings.DEMO_MODE:  # pragma: no cover
@@ -241,17 +245,18 @@ class OverviewMixin(BasePdfMixin):
         else:
             advanced_search = False
 
+        profile = request.user.profile
         extra_context = {
-            'layout': request.user.profile.layout,
+            'layout': profile.layout,
             'page': page,
             'special_pdf_selection': special_pdf_selection,
-            'tag_info_dict': TagServices.get_tag_info_dict(request.user.profile),
+            'tag_info_dict': TagServices.get_tag_info_dict(profile),
             'advanced_search': advanced_search,
             'search_query': request.GET.get('search', ''),
             'tag_query': tag_query,
-            'current_collection_id': request.user.profile.current_collection_id,
-            'current_collection_name': request.user.profile.current_collection_name,
-            'current_workspace_id': request.user.profile.current_workspace_id,
+            'current_collection_id': profile.current_collection_id,
+            'current_collection_name': profile.current_collection_name,
+            'current_workspace_id': profile.current_workspace_id,
         }
 
         return extra_context
@@ -302,6 +307,7 @@ class TagMixin:
 class EditPdfMixin(PdfMixin):
     obj_class = Pdf
     fields_requiring_extra_processing = ['collection', 'file_directory', 'name', 'tags']
+    permission_level = base_views.PermissionLevel.EDITOR
 
     @staticmethod
     def get_edit_form_dict():
@@ -394,6 +400,7 @@ class EditMetadataMixin(PdfMixin):
         'year',
     ]
     fields_requiring_extra_processing = fields
+    permission_level = base_views.PermissionLevel.EDITOR
 
     @classmethod
     def get_edit_form_dict(cls):
@@ -581,6 +588,7 @@ class ViewerView(PdfMixin, View):
             request,
             'viewer.html',
             {
+                'can_edit': request.user.profile.current_workspace.can_edit(request.user),
                 'current_page': current_page,
                 'pdf_id': identifier,
                 'revision': pdf.revision,
@@ -600,6 +608,9 @@ class UpdatePage(PdfMixin, View):
     displayed page in the browser.
     """
 
+    permission_level = base_views.PermissionLevel.EDITOR
+
+    @base_views.check_workspace_permissions
     def post(self, request: HttpRequest):
         """Change the current page."""
 
@@ -631,6 +642,9 @@ class UpdatePdf(PdfMixin, View):
     View for updating the PDF file. This is triggered everytime the user saves a modified PDF.
     """
 
+    permission_level = base_views.PermissionLevel.EDITOR
+
+    @base_views.check_workspace_permissions
     def post(self, request: HttpRequest):
         """Change the current page."""
 
@@ -706,6 +720,8 @@ class BulkAdd(BulkAddPdfMixin, base_views.BaseAdd):
 class Details(PdfMixin, base_views.BaseDetails):
     """View for displaying the details page of a PDF."""
 
+    permission_level = base_views.PermissionLevel.EDITOR
+
 
 class Edit(EditPdfMixin, base_views.BaseDetailsEdit):
     """
@@ -751,6 +767,8 @@ class DetailsCommentOverview(DetailsCommentOverviewMixin, base_views.BaseOvervie
 
 class Delete(PdfMixin, base_views.BaseDelete):
     """View for deleting the PDF specified by its ID."""
+
+    permission_level = base_views.PermissionLevel.EDITOR
 
     def get(self, request: HttpRequest, identifier: str):
         """Triggered by htmx. Display an inline form for deleting the pdf."""
@@ -810,6 +828,9 @@ class EditTag(TagMixin, View):
     The view for editing the name of a tag in the overview.
     """
 
+    permission_level = base_views.PermissionLevel.EDITOR
+
+    @base_views.check_workspace_permissions
     def get(self, request: HttpRequest):
         """Triggered by htmx. Display an inline form for editing the tag name."""
 
@@ -824,6 +845,7 @@ class EditTag(TagMixin, View):
 
         return redirect('pdf_overview')
 
+    @base_views.check_workspace_permissions
     def post(self, request: HttpRequest):
         """
         POST: Change the Tag name.
@@ -887,6 +909,9 @@ class EditTag(TagMixin, View):
 class DeleteTag(TagMixin, View):
     """View for deleting the tag specified by its ID."""
 
+    permission_level = base_views.PermissionLevel.EDITOR
+
+    @base_views.check_workspace_permissions
     def post(self, request: HttpRequest):
         """Delete the specified tag."""
 
@@ -913,6 +938,9 @@ class DeleteTag(TagMixin, View):
 class Star(PdfMixin, View):
     """View for starring and unstarring pdfs."""
 
+    permission_level = base_views.PermissionLevel.EDITOR
+
+    @base_views.check_workspace_permissions
     def post(self, request: HttpRequest, identifier: str):
         """Star or unstar the specified pdf."""
 
@@ -934,6 +962,9 @@ class Star(PdfMixin, View):
 class Archive(PdfMixin, View):
     """View for archiving and unarchiving pdfs."""
 
+    permission_level = base_views.PermissionLevel.EDITOR
+
+    @base_views.check_workspace_permissions
     def post(self, request: HttpRequest, identifier: str):
         """Archive or unarchive the specified pdf."""
 
@@ -955,6 +986,9 @@ class Archive(PdfMixin, View):
 class ImportMetadataBibtex(View, PdfMixin):
     """View for importing the metadata of a Pdf from bibtex."""
 
+    permission_level = base_views.PermissionLevel.EDITOR
+
+    @base_views.check_workspace_permissions
     def get(self, request: HttpRequest, identifier: str):  # pragma: no cover
         """Open the user upload modal"""
 
@@ -967,6 +1001,7 @@ class ImportMetadataBibtex(View, PdfMixin):
 
         return redirect('pdf_overview')
 
+    @base_views.check_workspace_permissions
     def post(self, request: HttpRequest, identifier: str):
         """Import the metadata from a bibtex file."""
 

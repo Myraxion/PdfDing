@@ -1,3 +1,5 @@
+{% load pdf_tags %}
+{% can_edit request.user.profile.current_workspace request.user as editor %}
 <div class="flex flex-row -mr-2! md:mr-0! md:gap-x-2 items-center [&>a]:cursor-pointer
             [&>a]:hover:text-slate-800 [&>a]:dark:hover:text-slate-200">
     <a id="preview-{{ loop_id }}"
@@ -11,9 +13,11 @@
             <path d="M14 10L21 3M21 3H15M21 3V9M10 14L3 21M3 21H9M3 21L3 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </a>
+    {% if editor %}
     <a id="open-actions-{{ loop_id }}" @click="show_actions_{{ loop_id }} = !show_actions_{{ loop_id }}"
        @click.away="show_actions_{{ loop_id }} = false"
        @keyup.escape.window="show_actions_{{ loop_id }} = false">
         {% include 'includes/svg/vertical_dots.html' %}
     </a>
+    {% endif %}
 </div>

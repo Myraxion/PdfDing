@@ -1,5 +1,7 @@
 from django import template
+from django.contrib.auth.models import User
 from pdf.models.pdf_models import Pdf
+from pdf.models.workspace_models import Workspace
 from pdf.services.pdf_services import get_or_create_pdf_reading_info
 from users.models import Profile
 
@@ -39,3 +41,17 @@ def get_current_page(pdf: Pdf, profile: Profile) -> int:
         current_page = pdf_reading_info.current_page
 
     return max(current_page, 0)
+
+
+@register.simple_tag
+def is_owner(workspace: Workspace, user: User) -> bool:
+    """Check if the user is an owner of the workspace."""
+
+    return workspace.is_owner(user)
+
+
+@register.simple_tag
+def can_edit(workspace: Workspace, user: User) -> bool:
+    """Check if the user is an owner or member of the workspace."""
+
+    return workspace.can_edit(user)

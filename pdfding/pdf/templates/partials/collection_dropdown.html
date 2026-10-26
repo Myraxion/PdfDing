@@ -1,4 +1,6 @@
 {% load i18n %}
+{% load pdf_tags %}
+{% is_owner request.user.profile.current_workspace request.user as owner %}
 <div id="collections_open_collapse_toggle"
       x-data="{ show_collections: false }"
       class="w-5/10 md:w-full cursor-pointer">
@@ -68,6 +70,7 @@
         <span>{% trans 'Create Collection' %}</span>
       </a>
       {% if page != 'collection_details' %}
+        {% if owner %}
       <a
         {% if current_collection_id == 'all' %}
          href="{% url 'collection_details' current_workspace_id %}"
@@ -78,6 +81,7 @@
         {% include 'includes/svg/settings.html' with size='dropdown' %}
         <span class="">{% trans 'Collection Settings' %}</span>
       </a>
+        {% endif %}
       {% endif %}
     </div>
   </div>

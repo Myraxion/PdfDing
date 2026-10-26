@@ -235,3 +235,48 @@ class TestAddUser(WorkspaceTestCase):
         )
 
         assert response.status_code == 404
+
+
+class Other(WorkspaceTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.other_user = User.objects.create_user(username='other_user', password='pw')
+        self.other_ws = create_workspace('other_ws', self.other_user)
+        self.other_user.profile.current_workspace_id = self.other_ws.id
+        self.other_user.profile.save()
+
+    @staticmethod
+    @workspace_views.check_workspace_owner_redirect
+    def dummy_function(self, request, other):
+        return 'return_value'
+
+    def test_check_workspace_owner_no_redirect(self):
+        self.other_user.profile.current_workspace.add_user_to_workspace(self.user, WorkspaceRoles.OWNER)
+        self.user.profile.current_workspace_id = self.other_ws.id
+        self.user.profile.current_collection_id = self.other_ws.id
+        self.user.profile.save()
+
+        mock = MagicMock()
+
+        # get dummy request
+        response = self.client.get(reverse('pdf_overview'))
+        request = response.wsgi_request
+
+        assert self.dummy_function(mock, request, 'asd') == 'return_value'
+
+    def test_check_workspace_owner_redirect(self):
+        self.other_user.profile.current_workspace.add_user_to_workspace(self.user, WorkspaceRoles.MEMBER)
+        self.user.profile.current_workspace_id = self.other_ws.id
+        self.user.profile.current_collection_id = self.other_ws.id
+        self.user.profile.save()
+
+        mock = MagicMock()
+
+        # get dummy request
+        response = self.client.get(reverse('pdf_overview'))
+        request = response.wsgi_request
+
+        return_value = self.dummy_function(mock, request, 'asd')
+        assert return_value.status_code == 302
+        assert return_value.url == reverse('pdf_overview')

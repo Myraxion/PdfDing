@@ -1,8 +1,9 @@
 from base import base_views
+from base.base_views import PermissionLevel, check_workspace_permissions
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import Http404, HttpRequest
+from django.http import HttpRequest
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 from pdf.forms import WorkspaceDescriptionForm, WorkspaceForm, WorkspaceNameForm, WorkspaceUserForm
@@ -19,6 +20,7 @@ class BaseWorkspaceMixin:
 class CreateWorkspaceMixin(BaseWorkspaceMixin):
     form = WorkspaceForm
     template_name = 'create_workspace.html'
+    permission_level = PermissionLevel.ALL
 
     def get_context_get(self, request: HttpRequest, __):
         """Get the context needed to be passed to the template containing the form for creating a workspace."""
@@ -44,6 +46,8 @@ class CreateWorkspaceMixin(BaseWorkspaceMixin):
 
 
 class WorkspaceMixin(BaseWorkspaceMixin):
+    permission_level = PermissionLevel.OWNER
+
     @staticmethod
     @check_object_access_allowed
     def get_object(request: HttpRequest, ws_id: str) -> Workspace:
@@ -87,6 +91,7 @@ class EditWorkspaceMixin(WorkspaceMixin):
 class Delete(WorkspaceMixin, base_views.BaseDelete):
     """View for deleting the workspace specified by its ID."""
 
+    @check_workspace_permissions
     def get(self, request: HttpRequest, identifier: str):
         """Triggered by htmx. Display an inline form for deleting the workspace."""
 
@@ -117,6 +122,21 @@ class Delete(WorkspaceMixin, base_views.BaseDelete):
             profile.save()
 
 
+def check_workspace_owner_redirect(some_function):
+    """Return a Http404 exception if user is not the owner of a workspace."""
+
+    def inner(*args, **kwargs):
+        request = args[1]  # first argument is self
+        ws = request.user.profile.current_workspace
+
+        if not ws.is_owner(request.user):
+            return redirect('pdf_overview')
+
+        return some_function(*args, **kwargs)
+
+    return inner
+
+
 class Create(CreateWorkspaceMixin, base_views.BaseAdd):
     """View for creating new workspaces."""
 
@@ -125,18 +145,20 @@ class Details(WorkspaceMixin, base_views.BaseDetails):
     """View for displaying the details page of a workspace."""
 
     # returns the current workspace, needs to be adjusted in the future
+    @check_workspace_owner_redirect
     def get(self, request: HttpRequest, identifier: str | None = None):  # pragma: no cover
         """Display the details page."""
 
-        obj = request.user.profile.current_workspace
-        ws_pdfs = get_pdfs_of_workspace(obj)
+        workspace = request.user.profile.current_workspace
+
+        ws_pdfs = get_pdfs_of_workspace(workspace)
 
         context = {
-            'workspace': obj,
+            'workspace': workspace,
             'number_of_pdfs': ws_pdfs.count(),
             'sidebar_name': 'includes/workspace_sidebar.html',
             'page': 'workspace_details',
-            'pdfs_total_size': get_size_of_all_workspace_pdfs(obj),
+            'pdfs_total_size': get_size_of_all_workspace_pdfs(workspace),
         }
 
         return render(request, 'workspace_details.html', context)
@@ -146,6 +168,7 @@ class Users(WorkspaceMixin, base_views.BaseDetails):
     """View for displaying the users page of a workspace."""
 
     # returns the current workspace, needs to be adjusted in the future
+    @check_workspace_owner_redirect
     def get(self, request: HttpRequest, identifier: str | None = None):  # pragma: no cover
         """Display the details page."""
 
@@ -164,12 +187,9 @@ class Users(WorkspaceMixin, base_views.BaseDetails):
 class AddUser(WorkspaceMixin, base_views.BaseDetails):
     """View for adding a user to a workspace."""
 
+    @check_workspace_permissions
     def post(self, request: HttpRequest):
         workspace = request.user.profile.current_workspace
-        current_user = request.user
-
-        if not workspace.owners.filter(id=current_user.id).exists():
-            raise Http404(_('Current user is not a owner of this workspace!'))
 
         try:
             email = request.POST.get('email')
@@ -190,6 +210,7 @@ class AddUser(WorkspaceMixin, base_views.BaseDetails):
 class CollectionDetails(WorkspaceMixin, base_views.BaseDetails):
     """View for displaying the collections page of a workspace."""
 
+    @check_workspace_owner_redirect
     def get(self, request: HttpRequest, identifier: str):
         """Display the collection page."""
 

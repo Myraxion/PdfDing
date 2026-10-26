@@ -45,6 +45,7 @@ class Workspace(models.Model):
             if user.profile.current_workspace_id == self.id:
                 # set to personal workspace
                 user.profile.current_workspace_id = user.id
+                user.profile.current_collection_id = 'all'
                 user.profile.save()
 
         super().delete(*args, **kwargs)
@@ -68,9 +69,9 @@ class Workspace(models.Model):
         workspace_users = workspace_users.order_by(
             models.Case(
                 models.When(role="Owner", then=models.Value(0)),
-                models.When(role="Member", then=models.Value(2)),
-                models.When(role="Guest", then=models.Value(3)),
-                default=models.Value(4),
+                models.When(role="Member", then=models.Value(1)),
+                models.When(role="Guest", then=models.Value(2)),
+                default=models.Value(3),
             ),
             'user__email',
         )
@@ -119,6 +120,21 @@ class Workspace(models.Model):
             raise WorkspaceError(_('User is already a user of the workspace!'))
         else:
             WorkspaceUser.objects.create(workspace=self, user=user, role=role)
+
+    def is_owner(self, user: User) -> bool:
+        """Check if the user is an owner of the workspace"""
+
+        is_owner = self.owners.filter(id=user.id).exists()
+
+        return is_owner
+
+    def can_edit(self, user: User) -> bool:
+        """Check if the user is an owner or member of the workspace"""
+
+        is_owner = self.owners.filter(id=user.id).exists()
+        is_member = self.members.filter(id=user.id).exists()
+
+        return is_owner or is_member
 
 
 class WorkspaceUser(models.Model):

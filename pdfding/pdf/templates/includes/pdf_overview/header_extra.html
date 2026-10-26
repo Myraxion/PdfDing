@@ -1,6 +1,9 @@
 {% load i18n %}
+{% load pdf_tags %}
+{% can_edit request.user.profile.current_workspace request.user as editor %}
 <div x-data="{ sortOpen: false, layoutOpen: false }" class="relative flex flex-row grow justify-end items-center md:gap-x-1">
     {% include 'includes/pdf_overview/search.html' %}
+    {% if editor %}
     <a id="bulk_edit"
        @click="show_bulk_edit_menu = !show_bulk_edit_menu"
        class="hidden md:block cursor-pointer rounded-sm py-1 pr-1 md:px-2 group relative
@@ -16,6 +19,7 @@
                      text-slate-600 dark:text-slate-200 bg-slate-200 dark:bg-slate-800">{% trans 'Bulk Edit' %}
         </span>
     </a>
+    {% endif %}
     <a id="layout_settings"
        @click="layoutOpen = !layoutOpen"
        @click.away="layoutOpen = false"

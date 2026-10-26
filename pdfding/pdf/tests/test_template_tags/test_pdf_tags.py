@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from pdf.models.pdf_models import Pdf
@@ -54,3 +56,13 @@ class TestPdfTags(TestCase):
         pdf_reading_info.save()
 
         assert 0 == pdf_tags.get_current_page(self.pdf, self.profile)
+
+    @patch('pdf.models.workspace_models.Workspace.is_owner')
+    def test_is_owner(self, mock_is_owner):
+        pdf_tags.is_owner(self.user.profile.current_workspace, self.user)
+        mock_is_owner.assert_called_once_with(self.user)
+
+    @patch('pdf.models.workspace_models.Workspace.can_edit')
+    def test_can_edit(self, mock_can_edit):
+        pdf_tags.can_edit(self.user.profile.current_workspace, self.user)
+        mock_can_edit.assert_called_once_with(self.user)

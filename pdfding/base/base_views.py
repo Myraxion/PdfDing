@@ -1,8 +1,10 @@
+from enum import Enum
+
 from base.service import construct_query_overview_url
 from core.settings import MEDIA_ROOT
 from django.contrib import messages
 from django.core.paginator import Paginator
-from django.http import FileResponse, HttpRequest
+from django.http import FileResponse, Http404, HttpRequest
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views import View
@@ -10,9 +12,36 @@ from django.views.static import serve
 from django_htmx.http import HttpResponseClientRedirect, HttpResponseClientRefresh
 
 
+class PermissionLevel(Enum):
+    """Permission levels for accessing objects."""
+
+    OWNER = 1
+    EDITOR = 2
+    ALL = 3
+
+
+def check_workspace_permissions(some_function):
+    """Return a Http404 exception if user is not allowed to access the object."""
+
+    def inner(*args, **kwargs):
+        self = args[0]
+        request = args[1]
+        ws = request.user.profile.current_workspace
+
+        if (self.permission_level == PermissionLevel.OWNER and not ws.is_owner(request.user)) or (
+            self.permission_level == PermissionLevel.EDITOR and not ws.can_edit(request.user)
+        ):
+            raise Http404('User is not allowed to access the object!')
+
+        return some_function(*args, **kwargs)
+
+    return inner
+
+
 class BaseAdd(View):
     """View for adding new objects."""
 
+    @check_workspace_permissions
     def get(self, request: HttpRequest, identifier: str = None):
         """Display the form for adding an object."""
 
@@ -20,6 +49,7 @@ class BaseAdd(View):
 
         return render(request, self.template_name, context)
 
+    @check_workspace_permissions
     def post(self, request: HttpRequest, identifier: str = None):
         """Create the new object."""
 
@@ -155,6 +185,7 @@ class BaseDownload(View):
 class BaseDetails(View):
     """Base view for displaying the details page of an object."""
 
+    @check_workspace_permissions
     def get(self, request: HttpRequest, identifier: str):
         """Display the details page."""
 
@@ -176,6 +207,7 @@ class BaseDetailsEdit(View):
     by the 'field' argument.
     """
 
+    @check_workspace_permissions
     def get(self, request: HttpRequest, identifier: str, field_name: str):
         """Triggered by htmx. Display an inline form for editing the correct field."""
 
@@ -200,6 +232,7 @@ class BaseDetailsEdit(View):
 
         return redirect(f'{self.obj_name}_details', identifier=identifier)
 
+    @check_workspace_permissions
     def post(self, request: HttpRequest, identifier: str, field_name: str):
         """
         POST: Change the specified field by submitting the form.
@@ -232,6 +265,7 @@ class BaseDetailsEdit(View):
 class BaseDelete(View):
     """Base view for deleting the object specified by its ID."""
 
+    @check_workspace_permissions
     def delete(self, request: HttpRequest, identifier: str):
         """Delete the specified object."""
 

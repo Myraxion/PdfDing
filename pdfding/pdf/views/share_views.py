@@ -4,6 +4,7 @@ from io import BytesIO
 
 import qrcode
 from base import base_views
+from base.base_views import PermissionLevel
 from django.contrib import messages
 from django.contrib.auth.decorators import login_not_required
 from django.contrib.sessions.models import Session
@@ -93,6 +94,7 @@ class BaseAddSharedMixin:
 class AddSharedPdfMixin(BaseAddSharedMixin, BaseShareMixin):
     form = ShareForm
     template_name = 'add_shared_pdf.html'
+    permission_level = PermissionLevel.EDITOR
 
     def get_context_get(self, request: HttpRequest, pdf_id: str):
         """Get the context needed to be passed to the template containing the form for adding a shared PDF."""
@@ -118,6 +120,7 @@ class AddSharedPdfMixin(BaseAddSharedMixin, BaseShareMixin):
 class AddSharedCollectionMixin(BaseAddSharedMixin, BaseShareCollectionMixin):
     form = ShareCollectionForm
     template_name = 'add_shared_collection.html'
+    permission_level = PermissionLevel.OWNER
 
     def get_context_get(self, request: HttpRequest, pdf_id: str):
         """
@@ -183,11 +186,13 @@ class OverviewMixin(BaseOverviewMixin):
     def get_extra_context(request: HttpRequest) -> dict:
         """get further information that needs to be passed to the template."""
 
+        profile = request.user.profile
+
         return {
             'page': 'shared_pdf_overview',
-            'current_collection_id': request.user.profile.current_collection_id,
-            'current_collection_name': request.user.profile.current_collection_name,
-            'current_workspace_id': request.user.profile.current_workspace_id,
+            'current_collection_id': profile.current_collection_id,
+            'current_collection_name': profile.current_collection_name,
+            'current_workspace_id': profile.current_workspace_id,
         }
 
 
@@ -212,16 +217,19 @@ class CollectionOverviewMixin(BaseOverviewMixin):
     def get_extra_context(request: HttpRequest) -> dict:
         """get further information that needs to be passed to the template."""
 
+        profile = request.user.profile
+
         return {
             'page': 'shared_collection_overview',
-            'current_collection_id': request.user.profile.current_collection_id,
-            'current_collection_name': request.user.profile.current_collection_name,
-            'current_workspace_id': request.user.profile.current_workspace_id,
+            'current_collection_id': profile.current_collection_id,
+            'current_collection_name': profile.current_collection_name,
+            'current_workspace_id': profile.current_workspace_id,
         }
 
 
 class SharedPdfMixin(BaseShareMixin):
     obj_class = SharedPdf
+    permission_level = PermissionLevel.EDITOR
 
     @staticmethod
     @check_object_access_allowed
@@ -236,6 +244,7 @@ class SharedPdfMixin(BaseShareMixin):
 
 class SharedCollectionMixin(BaseShareCollectionMixin):
     obj_class = SharedCollection
+    permission_level = PermissionLevel.OWNER
 
     @staticmethod
     @check_object_access_allowed

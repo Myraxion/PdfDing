@@ -1,3 +1,4 @@
+from base.base_views import PermissionLevel, check_workspace_permissions
 from django.contrib import messages
 from django.http import Http404, HttpRequest
 from django.shortcuts import redirect
@@ -13,6 +14,9 @@ from pdf.views.pdf_views import PdfMixin
 
 
 class BulkActions(PdfMixin, View):
+    permission_level = PermissionLevel.EDITOR
+
+    @check_workspace_permissions
     def post(self, request: HttpRequest):
         bulk_action = request.POST.get('selected_bulk_action')
         selected_pdf_ids = request.POST.get('bulk_selected_pdfs', '').strip()

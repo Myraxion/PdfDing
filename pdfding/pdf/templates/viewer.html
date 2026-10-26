@@ -459,7 +459,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                   <div class="toolbarButtonSpacer hiddenSmallView hiddenMediumView"></div>
                 </div>
                 <div class="toolbarHorizontalGroup" >
-                  {% if user_view_bool %}
+                  {% if user_view_bool and can_edit %}
                   <button id="savePdf" onclick="update_pdf('{{ pdf_id }}', '{% url 'update_pdf'%}', '{{ csrf_token }}', '{{ tab_title }}')" class="button1" title="Save">
                     <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
@@ -472,7 +472,7 @@ See https://github.com/adobe-type-tools/cmap-resources
                   </button>
                   {% endif %}
                 </div>
-                {% if user_view_bool %}
+                {% if user_view_bool and can_edit %}
                 <div id="editorModeButtons" class="toolbarHorizontalGroup">
                   <div id="editorComment" class="toolbarButtonWithContainer" hidden="true">
                     <button
@@ -1291,7 +1291,7 @@ See https://github.com/adobe-type-tools/cmap-resources
     <div id="printContainer"></div>
   </body>
 
-  {% if not user_view_bool %}
+  {% if user_view_bool and not can_edit or not user_view_bool %}
   <div id="editorFreeTextButton"></div><div id="editorFreeTextColor"></div><div id="editorFreeTextFontSize"></div>
   <div id="editorFreeHighlightThickness"></div><div id="editorHighlightButton"></div>
   <div id="editorHighlightShowAll"></div><div id="editorInkButton"></div><div id="editorInkColor"></div>

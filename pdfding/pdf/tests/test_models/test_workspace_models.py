@@ -30,6 +30,7 @@ class TestWorkspace(TestCase):
         other_user = User.objects.get(id=self.other_user.id)
         assert not ws_path.exists()
         assert other_user.profile.current_workspace_id == str(self.other_user.id)
+        assert other_user.profile.current_collection_id == 'all'
 
     def test_user_property(self):
         self.assertEqual(self.ws.users.count(), 1)
@@ -136,3 +137,23 @@ class TestWorkspace(TestCase):
     def test_add_workspace_user_user_present(self):
         with self.assertRaisesMessage(WorkspaceError, expected_message='User is already a user of the workspace!'):
             self.ws.add_user_to_workspace(self.user, WorkspaceRoles.MEMBER)
+
+    def test_is_owner(self):
+        user_2 = User.objects.create_user(username='user_2', password='password')
+        user_3 = User.objects.create_user(username='user_3', password='password')
+        self.ws.add_user_to_workspace(user_2, WorkspaceRoles.MEMBER)
+        self.ws.add_user_to_workspace(user_3, WorkspaceRoles.GUEST)
+
+        assert self.ws.is_owner(self.user)
+        assert not self.ws.is_owner(user_2)
+        assert not self.ws.is_owner(user_3)
+
+    def test_can_edit(self):
+        user_2 = User.objects.create_user(username='user_2', password='password')
+        user_3 = User.objects.create_user(username='user_3', password='password')
+        self.ws.add_user_to_workspace(user_2, WorkspaceRoles.MEMBER)
+        self.ws.add_user_to_workspace(user_3, WorkspaceRoles.GUEST)
+
+        assert self.ws.can_edit(self.user)
+        assert self.ws.can_edit(user_2)
+        assert not self.ws.can_edit(user_3)
