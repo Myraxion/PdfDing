@@ -1,3 +1,4 @@
+import pytest
 from django.contrib.auth.models import User
 from django.test import TestCase
 from pdf.models.helpers import get_workspace_path
@@ -14,6 +15,7 @@ class TestWorkspace(TestCase):
     def test_delete(self):
         self.ws.add_user_to_workspace(self.other_user, WorkspaceRoles.MEMBER)
         self.other_user.profile.current_workspace_id = self.ws.id
+        self.other_user.profile.current_collection_id = self.ws.id
         self.other_user.profile.save()
 
         ws_path = get_workspace_path(self.ws)
@@ -24,6 +26,7 @@ class TestWorkspace(TestCase):
         dummy_file_path.touch()
 
         assert self.other_user.profile.current_workspace_id == self.ws.id
+        assert self.other_user.profile.current_collection_id == self.ws.id
 
         self.ws.delete()
 
@@ -48,6 +51,8 @@ class TestWorkspace(TestCase):
 
     def test_owners_property(self):
         self.assertEqual(self.ws.owners.count(), 1)
+        self.assertEqual(self.ws.members.count(), 0)
+        self.assertEqual(self.ws.guests.count(), 0)
 
         user_2 = User.objects.create_user(username='user_2', password='password')
         WorkspaceUser.objects.create(workspace=self.ws, user=user_2, role=WorkspaceRoles.OWNER)
@@ -157,3 +162,38 @@ class TestWorkspace(TestCase):
         assert self.ws.can_edit(self.user)
         assert self.ws.can_edit(user_2)
         assert not self.ws.can_edit(user_3)
+
+    def test_remove_workspace_user(self):
+        other_ws = create_workspace('other_ws', self.other_user)
+        self.other_user.profile.current_workspace_id = other_ws.id
+        self.other_user.profile.save()
+
+        self.other_user.profile.current_workspace.add_user_to_workspace(self.user, WorkspaceRoles.MEMBER)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.current_collection_id = other_ws.id
+        self.user.profile.save()
+
+        assert other_ws.members.filter(id=self.user.id).exists()
+
+        other_ws.remove_workspace_user(self.user)
+
+        assert not other_ws.members.filter(id=self.user.id).exists()
+
+        # get user again
+        user = User.objects.get(id=self.user.id)
+        assert user.profile.current_workspace_id == str(self.user.id)
+        assert user.profile.current_collection_id == 'all'
+
+    def test_remove_workspace_user_personal_ws(self):
+        ws = self.user.profile.current_workspace
+
+        with pytest.raises(WorkspaceError, match='Action not possible for personal workspaces!'):
+            ws.remove_workspace_user(self.user)
+
+    def test_post_only_owner(self):
+        other_ws = create_workspace('other_ws', self.user)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.save()
+
+        with pytest.raises(WorkspaceError, match='Action not possible as there is only one workspace owner!'):
+            other_ws.remove_workspace_user(self.user)

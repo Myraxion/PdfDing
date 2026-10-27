@@ -136,6 +136,21 @@ class Workspace(models.Model):
 
         return is_owner or is_member
 
+    def remove_workspace_user(self, user: User):
+        """Remove a user from a workspace."""
+
+        if self.personal_workspace:
+            raise WorkspaceError(_('Action not possible for personal workspaces!'))
+        elif self.is_owner(user) and self.owners.count() == 1:
+            raise WorkspaceError(_('Action not possible as there is only one workspace owner!'))
+        else:
+            workspace_user = self.workspaceuser_set.get(user__id=user.id)
+            workspace_user.delete()
+            profile = user.profile
+            profile.current_workspace_id = user.id
+            profile.current_collection_id = 'all'
+            profile.save()
+
 
 class WorkspaceUser(models.Model):
     """

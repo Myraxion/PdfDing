@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.urls import reverse
 from helpers import PdfDingE2ETestCase
-from pdf.models.workspace_models import Workspace
+from pdf.models.workspace_models import Workspace, WorkspaceRoles
 from pdf.services.workspace_services import create_workspace
 from playwright.sync_api import expect, sync_playwright
 
@@ -107,6 +107,53 @@ class TestWorkspaceE2ETestCase(PdfDingE2ETestCase):
             self.open(reverse('workspace_details'), p)
 
             expect(self.page.locator("#delete-workspace").first).not_to_be_visible()
+
+    def test_cancel_leave(self):
+        other_ws = create_workspace('other_ws', self.user)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.save()
+
+        with sync_playwright() as p:
+            self.open(reverse('workspace_details'), p)
+
+            expect(self.page.locator("#delete_modal").first).not_to_be_visible()
+            self.page.locator("#leave-workspace").click()
+            expect(self.page.locator("#delete_modal").first).to_be_visible()
+            self.page.locator("#cancel_leave").get_by_text("Cancel").click()
+            expect(self.page.locator("#delete_modal").first).not_to_be_visible()
+
+    def test_leave_workspace(self):
+        other_user = User.objects.create_user(username='other_user', password='pw')
+        other_ws = create_workspace('other_ws', other_user)
+        other_user.profile.current_workspace_id = other_ws.id
+        other_user.profile.save()
+
+        other_user.profile.current_workspace.add_user_to_workspace(self.user, WorkspaceRoles.MEMBER)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.current_collection_id = other_ws.id
+        self.user.profile.save()
+
+        assert other_ws.members.filter(id=self.user.id).exists()
+
+        with sync_playwright() as p:
+            self.open(reverse('workspace_details'), p)
+
+            self.page.locator("#leave-workspace").click()
+            self.page.locator("#confirm_leave").get_by_text("Submit").click()
+            expect(self.page.locator("#delete_modal").first).not_to_be_visible()
+
+        assert not other_ws.members.filter(id=self.user.id).exists()
+
+        # get user again
+        user = User.objects.get(id=self.user.id)
+        assert user.profile.current_workspace_id == str(self.user.id)
+        assert user.profile.current_collection_id == 'all'
+
+    def test_leave_not_visible_personal(self):
+        with sync_playwright() as p:
+            self.open(reverse('workspace_details'), p)
+
+            expect(self.page.locator("#leave-workspace").first).not_to_be_visible()
 
     def test_add_user(self):
         created_ws = create_workspace('created_ws', self.user)

@@ -1,6 +1,4 @@
 {% load i18n %}
-{% load pdf_tags %}
-{% is_owner request.user.profile.current_workspace request.user as owner %}
 <div id="workspace_open_collapse_toggle"
      x-data="{ show_workspaces: false }"
      class="
@@ -50,12 +48,10 @@
         <span class="">{% trans 'Create Workspace' %}</span>
       </a>
       {% if 'overview' in page or page == 'dashboard' %}
-        {% if owner %}
       <a href="{% url 'workspace_details' %}" class="ws-modal-child items-center gap-x-2">
         {% include 'includes/svg/settings.html' with size='dropdown' %}
         <span class="">{% trans 'Workspace Settings' %}</span>
       </a>
-        {% endif %}
       {% endif %}
     </div>
   </div>

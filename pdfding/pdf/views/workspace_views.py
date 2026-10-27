@@ -6,6 +6,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.http import HttpRequest
 from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
+from django.views import View
+from django_htmx.http import HttpResponseClientRefresh
 from pdf.forms import WorkspaceDescriptionForm, WorkspaceForm, WorkspaceNameForm, WorkspaceUserForm
 from pdf.models.collection_models import Collection
 from pdf.models.workspace_models import Workspace, WorkspaceError, WorkspaceRoles
@@ -122,6 +124,40 @@ class Delete(WorkspaceMixin, base_views.BaseDelete):
             profile.save()
 
 
+class Leave(WorkspaceMixin, View):
+    """View for deleting the workspace specified by its ID."""
+
+    def get(self, request: HttpRequest, identifier: str):  # pragma: no cover
+        """Triggered by htmx. Display an inline form for deleting the workspace."""
+
+        if request.htmx:
+            workspace = self.get_object(request, identifier)
+
+            return render(
+                request,
+                'partials/leave_workspace.html',
+                {'workspace_id': identifier, 'workspace_name': workspace.name},
+            )
+
+        return redirect('pdf_overview')
+
+    def post(self, request: HttpRequest, identifier: str):
+        """Leave the workspace."""
+
+        if request.htmx:
+            workspace = self.get_object(request, identifier)
+            user = request.user
+
+            try:
+                workspace.remove_workspace_user(user)
+            except WorkspaceError as exception:  # pragma: no cover
+                messages.warning(request, str(exception))
+
+            return HttpResponseClientRefresh()
+
+        return redirect('pdf_overview')  # pragma: no cover
+
+
 def check_workspace_owner_redirect(some_function):
     """Return a Http404 exception if user is not the owner of a workspace."""
 
@@ -145,7 +181,6 @@ class Details(WorkspaceMixin, base_views.BaseDetails):
     """View for displaying the details page of a workspace."""
 
     # returns the current workspace, needs to be adjusted in the future
-    @check_workspace_owner_redirect
     def get(self, request: HttpRequest, identifier: str | None = None):  # pragma: no cover
         """Display the details page."""
 

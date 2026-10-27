@@ -1,6 +1,8 @@
 {% extends 'layouts/base_sidebar.html' %}
 {% load i18n %}
+{% load pdf_tags %}
 {% block sidebar_content %}
+{% is_owner request.user.profile.current_workspace request.user as owner %}
 <div class="flex flex-row md:flex-col w-full gap-2 md:gap-1 pb-3 md:mb-2 md:border-b border-slate-300 dark:border-slate-600">
   {% if page == 'collection_details' %}
   {% include 'partials/workspace_dropdown.html' with page='collection_details' %}
@@ -25,6 +27,7 @@
             <span class="hidden md:block">{% trans 'Workspace Details' %}</span>
         </a>
     </div>
+    {% if owner %}
     <div {% if page == 'workspace_users' %} class="bg-slate-200 md:bg-slate-100 dark:bg-slate-800" {% endif %}>
         <a href="{% url 'workspace_users' %}">
             {% include 'includes/svg/user.html' %}
@@ -37,5 +40,6 @@
             <span class="hidden md:block">{% trans 'Collection Details' %}</span>
         </a>
     </div>
+    {% endif %}
 </div>
 {% endblock %}
