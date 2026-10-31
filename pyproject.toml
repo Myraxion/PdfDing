@@ -19,7 +19,7 @@ gunicorn = "==26.2.0"
 huey = "==3.5.3"
 psycopg2-binary = "==2.9.13"
 pypdfium2 = "==5.14.0"
-pypdf = "==6.21.2"
+pypdf = "==6.21.4"
 python-magic = "==0.4.27"
 qrcode = { extras = ["pil"], version = "==8.2" }
 whitenoise = { extras = ["brotli"], version = "==6.12.0" }
