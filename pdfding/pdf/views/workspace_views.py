@@ -125,7 +125,7 @@ class Delete(WorkspaceMixin, base_views.BaseDelete):
 
 
 class Leave(WorkspaceMixin, View):
-    """View for deleting the workspace specified by its ID."""
+    """View for leaving a workspace."""
 
     def get(self, request: HttpRequest, identifier: str):  # pragma: no cover
         """Triggered by htmx. Display an inline form for deleting the workspace."""
@@ -152,6 +152,43 @@ class Leave(WorkspaceMixin, View):
                 workspace.remove_workspace_user(user)
             except WorkspaceError as exception:  # pragma: no cover
                 messages.warning(request, str(exception))
+
+            return HttpResponseClientRefresh()
+
+        return redirect('pdf_overview')  # pragma: no cover
+
+
+class RemoveUser(WorkspaceMixin, View):
+    """View for removing a user from a workspace."""
+
+    @check_workspace_permissions
+    def get(self, request: HttpRequest, identifier: str, user_id: str):  # pragma: no cover
+        """Triggered by htmx. Display an inline form for removing a user from the workspace."""
+
+        if request.htmx:
+            return render(
+                request,
+                'partials/remove_workspace_user.html',
+                {'workspace_id': identifier, 'user_id': user_id},
+            )
+
+        return redirect('pdf_overview')
+
+    @check_workspace_permissions
+    def post(self, request: HttpRequest, identifier: str, user_id: str):
+        """Remove user from the workspace."""
+
+        if request.htmx:
+            workspace = self.get_object(request, identifier)
+            user = User.objects.get(id=user_id)
+
+            try:
+                workspace.remove_workspace_user(user)
+                messages.info(request, _('Successfully remove user from workspace.'))
+            except WorkspaceError as exception:  # pragma: no cover
+                messages.warning(request, str(exception))
+            except ObjectDoesNotExist:  # pragma: no cover
+                pass
 
             return HttpResponseClientRefresh()
 

@@ -175,6 +175,21 @@ class TestLeave(WorkspaceTestCase):
         assert response.status_code == 200
 
 
+class TestRemove(WorkspaceTestCase):
+    @patch('pdf.models.workspace_models.Workspace.remove_workspace_user')
+    def test_post(self, mock_remove):
+        some_user = User.objects.create_user(username='bla', password=self.password, email='a@b.com')
+        ws = self.user.profile.current_workspace
+        headers = {'HTTP_HX-Request': 'true'}
+        response = self.client.post(
+            reverse('remove_workspace_user', kwargs={'identifier': ws.id, 'user_id': some_user.id}), **headers
+        )
+
+        mock_remove.assert_called_once_with(some_user)
+
+        assert response.status_code == 200
+
+
 class TestAddUser(WorkspaceTestCase):
     def test_add_user(self):
         created_ws = create_workspace('created_ws', self.user)

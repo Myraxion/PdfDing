@@ -18,7 +18,7 @@
       </div>
       <div class="flex justify-between text-slate-600 dark:text-slate-400">
         <div class="w-5/6">
-          <span id="theme">{% trans 'Owner' %}</span>
+          <span>{% trans 'Owner' %}</span>
         </div>
       </div>
     </div>
@@ -46,24 +46,27 @@
         </button>
     </form>
   </div>
-  <div>
+  <div class="pt-4">
     {% for ws_user in workspace.workspace_users_ordered %}
-    <div class="pt-4">
-      <span class="text-lg font-semibold">{{ ws_user.user.email }}</span>
-    </div>
-    <div class="flex justify-between text-slate-600 dark:text-slate-400">
-        <div class="w-5/6">
-            <span id="theme">{{ ws_user.role }}</span>
+    {% with loop_id=forloop.counter %}
+    <div class="relative" x-data="{ show_actions_{{ loop_id }}: false }">
+      <div class="flex justify-between items-center">
+        <span class="font-semibold">{{ ws_user.user.email }}</span>
+        <div>
+          <a class="cursor-pointer text-slate-400 dark:text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            id="open-actions-{{ loop_id }}" @click="show_actions_{{ loop_id }} = !show_actions_{{ loop_id }}"
+            @click.away="show_actions_{{ loop_id }} = false"
+            @keyup.escape.window="show_actions_{{ loop_id }} = false">
+              {% include 'includes/svg/vertical_dots.html' %}
+          </a>
         </div>
-        <div class="pr-0 md:pr-6">
-            <a id="theme_edit" class="cursor-pointer text-primary hover:text-secondary"
-                hx-get="{% url 'profile-setting-change' 'theme' %}"
-                hx-target="#theme"
-                hx-swap="innerHTML" >
-                {{ edit }}
-            </a>
-        </div>
+      </div>
+      <div class="text-sm text-slate-600 dark:text-slate-400">
+          <span>{{ ws_user.role }}</span>
+      </div>
+      {% include 'includes/workspace_user_actions.html' %}
     </div>
+    {% endwith %}
     {% endfor %}
   </div>
 </div>

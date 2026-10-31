@@ -128,7 +128,7 @@ class TestWorkspaceE2ETestCase(PdfDingE2ETestCase):
         other_user.profile.current_workspace_id = other_ws.id
         other_user.profile.save()
 
-        other_user.profile.current_workspace.add_user_to_workspace(self.user, WorkspaceRoles.MEMBER)
+        other_ws.add_user_to_workspace(self.user, WorkspaceRoles.MEMBER)
         self.user.profile.current_workspace_id = other_ws.id
         self.user.profile.current_collection_id = other_ws.id
         self.user.profile.save()
@@ -154,6 +154,49 @@ class TestWorkspaceE2ETestCase(PdfDingE2ETestCase):
             self.open(reverse('workspace_details'), p)
 
             expect(self.page.locator("#leave-workspace").first).not_to_be_visible()
+
+    def test_cancel_remove_workspace_user(self):
+        other_ws = create_workspace('other_ws', self.user)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.save()
+
+        with sync_playwright() as p:
+            self.open(reverse('workspace_users'), p)
+
+            expect(self.page.locator("#delete_modal").first).not_to_be_visible()
+            self.page.locator("#open-actions-1").click()
+            self.page.locator("#remove-1").click()
+            expect(self.page.locator("#delete_modal").first).to_be_visible()
+            self.page.locator("#cancel_remove").get_by_text("Cancel").click()
+            expect(self.page.locator("#delete_modal").first).not_to_be_visible()
+
+    def test_remove_workspace_user(self):
+        other_user = User.objects.create_user(username='other_user', password='pw')
+        other_ws = create_workspace('other_ws', self.user)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.save()
+
+        other_ws.add_user_to_workspace(other_user, WorkspaceRoles.MEMBER)
+        other_user.profile.current_workspace_id = other_ws.id
+        other_user.profile.current_collection_id = other_ws.id
+        other_user.profile.save()
+
+        assert other_ws.members.filter(id=other_user.id).exists()
+
+        with sync_playwright() as p:
+            self.open(reverse('workspace_users'), p)
+
+            self.page.locator("#open-actions-2").click()
+            self.page.locator("#remove-2").click()
+            self.page.locator("#confirm_remove").get_by_text("Submit").click()
+            expect(self.page.locator("#delete_modal").first).not_to_be_visible()
+
+        assert not other_ws.members.filter(id=other_user.id).exists()
+
+        # get user again
+        other_user = User.objects.get(id=other_user.id)
+        assert other_user.profile.current_workspace_id == str(other_user.id)
+        assert other_user.profile.current_collection_id == 'all'
 
     def test_add_user(self):
         created_ws = create_workspace('created_ws', self.user)

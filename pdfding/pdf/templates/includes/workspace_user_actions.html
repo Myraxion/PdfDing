@@ -1,0 +1,24 @@
+{% load i18n %}
+{% load static %}
+<div id="actions-{{ loop_id }}" x-show="show_actions_{{ loop_id }}" x-cloak
+     x-transition:enter="duration-300 ease-out" x-transition:enter-start="opacity-0 scale-90"
+     x-transition:enter-end="opacity-100 scale-100"
+     class="flex flex-col absolute top-7 right-2 z-20 py-1 px-2 rounded-sm border text-base!
+            [&>a]:py-1 [&>a]:px-2 [&>a]:flex [&>a]:items-center [&>a]:gap-x-2 [&>a]:rounded-sm [&>a]:cursor-pointer
+            text-slate-800 bg-slate-200 border-slate-300 [&>a]:hover:bg-slate-300
+            dark:text-slate-200 dark:bg-slate-700 dark:border-slate-600 dark:[&>a]:hover:bg-slate-600">
+    <a id="adjust-admin-rights-{{ loop_id }}"
+       hx-post="{% url 'admin_adjust_rights' user.id %}"
+       hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+        {% include 'includes/svg/user.html' %}
+        {% trans 'Adjust Role' %}
+    </a>
+    <a id="remove-{{ loop_id }}"
+       @click="show_delete_modal= true"
+       hx-get="{% url 'remove_workspace_user' workspace.id ws_user.user.id %}"
+       hx-target="#delete_modal"
+       hx-swap="innerHTML">
+        <img src="{% static 'images/trash.svg' %}" width="19">
+        {% trans 'Remove' %}
+    </a>
+</div>
