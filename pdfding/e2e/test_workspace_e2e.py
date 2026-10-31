@@ -198,6 +198,44 @@ class TestWorkspaceE2ETestCase(PdfDingE2ETestCase):
         assert other_user.profile.current_workspace_id == str(other_user.id)
         assert other_user.profile.current_collection_id == 'all'
 
+    def test_cancel_change_user_role(self):
+        other_ws = create_workspace('other_ws', self.user)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.save()
+
+        with sync_playwright() as p:
+            self.open(reverse('workspace_users'), p)
+
+            expect(self.page.locator("#delete_modal").first).not_to_be_visible()
+            self.page.locator("#open-actions-1").click()
+            self.page.locator("#change-role-1").click()
+            expect(self.page.locator("#delete_modal").first).to_be_visible()
+            self.page.locator("#cancel_change_role").get_by_text("Cancel").click()
+            expect(self.page.locator("#delete_modal").first).not_to_be_visible()
+
+    def test_change_user_role(self):
+        other_ws = create_workspace('other_ws', self.user)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.current_collection_id = other_ws.id
+        self.user.profile.save()
+
+        other_user = User.objects.create_user(username='other_user', password='password')
+        self.user.profile.current_workspace.add_user_to_workspace(other_user, WorkspaceRoles.MEMBER)
+
+        workspace_user = other_ws.workspaceuser_set.get(user__id=other_user.id)
+        assert workspace_user.role == WorkspaceRoles.MEMBER
+
+        with sync_playwright() as p:
+            self.open(reverse('workspace_users'), p)
+
+            self.page.locator("#open-actions-2").click()
+            self.page.locator("#change-role-2").click()
+            self.page.locator("#submit_change_role").get_by_text("Submit").click()
+            expect(self.page.locator("#delete_modal").first).not_to_be_visible()
+
+        workspace_user = other_ws.workspaceuser_set.get(user__id=other_user.id)
+        assert workspace_user.role == WorkspaceRoles.GUEST
+
     def test_add_user(self):
         created_ws = create_workspace('created_ws', self.user)
         self.user.profile.current_workspace_id = created_ws.id
