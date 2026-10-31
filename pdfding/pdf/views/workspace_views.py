@@ -8,7 +8,13 @@ from django.shortcuts import redirect, render
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 from django_htmx.http import HttpResponseClientRefresh
-from pdf.forms import WorkspaceDescriptionForm, WorkspaceForm, WorkspaceNameForm, WorkspaceUserForm
+from pdf.forms import (
+    WorkspaceDescriptionForm,
+    WorkspaceForm,
+    WorkspaceNameForm,
+    WorkspaceUserForm,
+    WorkspaceUserRoleForm,
+)
 from pdf.models.collection_models import Collection
 from pdf.models.workspace_models import Workspace, WorkspaceError, WorkspaceRoles
 from pdf.services.pdf_services import check_object_access_allowed
@@ -166,10 +172,12 @@ class RemoveUser(WorkspaceMixin, View):
         """Triggered by htmx. Display an inline form for removing a user from the workspace."""
 
         if request.htmx:
+            user = User.objects.get(id=user_id)
+
             return render(
                 request,
                 'partials/remove_workspace_user.html',
-                {'workspace_id': identifier, 'user_id': user_id},
+                {'workspace_id': identifier, 'user_id': user_id, 'user_email': user.email},
             )
 
         return redirect('pdf_overview')
@@ -193,6 +201,49 @@ class RemoveUser(WorkspaceMixin, View):
             return HttpResponseClientRefresh()
 
         return redirect('pdf_overview')  # pragma: no cover
+
+
+class ChangeUserRole(WorkspaceMixin, View):
+    """View for changing the role of a user."""
+
+    @check_workspace_permissions
+    def get(self, request: HttpRequest, identifier: str, user_id: str):  # pragma: no cover
+        if request.htmx:
+            user = User.objects.get(id=user_id)
+
+            return render(
+                request,
+                'partials/adjust_user_role.html',
+                {
+                    'workspace_id': identifier,
+                    'user_id': user_id,
+                    'user_email': user.email,
+                    'form': WorkspaceUserRoleForm(),
+                },
+            )
+
+        return redirect('pdf_overview')
+
+    @check_workspace_permissions
+    def post(self, request: HttpRequest, identifier: str, user_id: str):
+        """Change the role of a user from the workspace."""
+
+        workspace = self.get_object(request, identifier)
+        user = User.objects.get(id=user_id)
+
+        if workspace.personal_workspace:
+            messages.warning(request, _('Action not possible for personal workspaces!'))
+        elif workspace.is_owner(user) and workspace.owners.count() == 1:
+            messages.warning(request, _('Action not possible as there is only one workspace owner!'))
+        else:
+            role = WorkspaceRoles(request.POST.get('role'))
+            workspace_user = workspace.workspaceuser_set.get(user__id=user.id)
+            workspace_user.role = role
+            workspace_user.save()
+
+            messages.info(request, _('Successfully adjusted user role.'))
+
+        return redirect('workspace_users')  # pragma: no cover
 
 
 def check_workspace_owner_redirect(some_function):

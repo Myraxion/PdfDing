@@ -535,13 +535,18 @@ class WorkspaceDescriptionForm(forms.ModelForm):
         fields = ['description']
 
 
-class WorkspaceUserForm(forms.Form):  # pragma: no cover
+class WorkspaceUserRoleForm(forms.Form):  # pragma: no cover
+    """Form for workspace user role."""
+
+    role = forms.ChoiceField(choices=WorkspaceRoles)
+
+
+class WorkspaceUserForm(WorkspaceUserRoleForm):  # pragma: no cover
     """Form for adding users to a workspace."""
 
     email = forms.CharField(
         required=True, widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': _('Email')})
     )
-    role = forms.ChoiceField(choices=WorkspaceRoles)
 
 
 class CollectionForm(forms.Form):

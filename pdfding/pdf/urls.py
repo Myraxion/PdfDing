@@ -104,6 +104,11 @@ urlpatterns = [
     path('workspace/delete/<identifier>', workspace_views.Delete.as_view(), name='delete_workspace'),
     path('workspace/leave/<identifier>', workspace_views.Leave.as_view(), name='leave_workspace'),
     path('workspace/remove/<identifier>/<user_id>', workspace_views.RemoveUser.as_view(), name='remove_workspace_user'),
+    path(
+        'workspace/adjust_role/<identifier>/<user_id>',
+        workspace_views.ChangeUserRole.as_view(),
+        name='change_user_role',
+    ),
     path('', pdf_views.Overview.as_view(), name='workspace_overview'),  # needed for base views working
     path('collection/create', collection_views.Create.as_view(), name='create_collection'),
     path('collection/details/<identifier>', workspace_views.CollectionDetails.as_view(), name='collection_details'),

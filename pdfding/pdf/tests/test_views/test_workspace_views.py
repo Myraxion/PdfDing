@@ -190,6 +190,61 @@ class TestRemove(WorkspaceTestCase):
         assert response.status_code == 200
 
 
+class TestChangeUserRole(WorkspaceTestCase):
+    def test_change_user_role(self):
+        other_ws = create_workspace('other_ws', self.user)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.current_collection_id = other_ws.id
+        self.user.profile.save()
+
+        other_user = User.objects.create_user(username='other_user', password='password')
+        self.user.profile.current_workspace.add_user_to_workspace(other_user, WorkspaceRoles.MEMBER)
+
+        workspace_user = other_ws.workspaceuser_set.get(user__id=other_user.id)
+        assert workspace_user.role == WorkspaceRoles.MEMBER
+
+        response = self.client.post(
+            reverse('change_user_role', kwargs={'identifier': other_ws.id, 'user_id': other_user.id}),
+            data={'role': 'Owner'},
+            follow=True,
+        )
+
+        # get user again
+        workspace_user = other_ws.workspaceuser_set.get(user__id=other_user.id)
+        assert workspace_user.role == WorkspaceRoles.OWNER
+
+        message = list(response.context['messages'])[0]
+        assert message.message == 'Successfully adjusted user role.'
+        self.assertRedirects(response, reverse('workspace_users'), status_code=302)
+
+    def test_change_role_personal_ws(self):
+        ws = self.user.profile.current_workspace
+        response = self.client.post(
+            reverse('change_user_role', kwargs={'identifier': ws.id, 'user_id': self.user.id}),
+            data={'role': 'Member'},
+            follow=True,
+        )
+
+        message = list(response.context['messages'])[0]
+        assert message.message == 'Action not possible for personal workspaces!'
+        self.assertRedirects(response, reverse('workspace_users'), status_code=302)
+
+    def test_change_role_single_owner(self):
+        other_ws = create_workspace('other_ws', self.user)
+        self.user.profile.current_workspace_id = other_ws.id
+        self.user.profile.save()
+
+        response = self.client.post(
+            reverse('change_user_role', kwargs={'identifier': other_ws.id, 'user_id': self.user.id}),
+            data={'role': 'Member'},
+            follow=True,
+        )
+
+        message = list(response.context['messages'])[0]
+        assert message.message == 'Action not possible as there is only one workspace owner!'
+        self.assertRedirects(response, reverse('workspace_users'), status_code=302)
+
+
 class TestAddUser(WorkspaceTestCase):
     def test_add_user(self):
         created_ws = create_workspace('created_ws', self.user)
