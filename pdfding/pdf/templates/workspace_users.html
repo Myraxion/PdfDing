@@ -27,7 +27,11 @@
     </div>
   </div>
   {% else %}
-  <div class="pt-2 md:pt-4">
+  <div class="text-slate-600 dark:text-slate-400 text-sm pt-2">
+    {% trans 'Please note that PdfDing does not offer real-time collaboration.' %}
+    {% trans 'If users edit a PDF at the same time, they will overwrite their changes.' %}
+  </div>
+  <div class="pt-2">
     <form id="add_workspace_user"
           action="{% url 'workspace_add_user' %}"
           method="post"
