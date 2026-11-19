@@ -22,3 +22,6 @@ pdfding/static/pdfjs
 **/htmlcov
 **/pdfjs.zip
 **/.coverage
+
+.agents/skills/
+.scratch/
